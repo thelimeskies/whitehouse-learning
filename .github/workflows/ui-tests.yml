@@ -8,6 +8,8 @@ on:
       - main
       - develop
       - main-hotfix
+      - staging
+      - client-production
 
 permissions:
   # Do not change this as GITHUB_TOKEN is being used by roulette

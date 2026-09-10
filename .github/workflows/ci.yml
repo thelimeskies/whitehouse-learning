@@ -5,6 +5,8 @@ on:
       - main
       - develop
       - main-hotfix
+      - staging
+      - client-production
   pull_request: {}
 jobs:
   tests:
