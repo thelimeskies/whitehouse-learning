@@ -1,14 +1,16 @@
 # Whitehouse Learning on Dokploy
 
-This directory contains the demo deployment definition for Dokploy.
+The live demo must remain on its current raw Compose definition until the custom
+image has built successfully and its data has been backed up. The production
+replacement is `deploy/compose.production.yml`.
 
-- Compose path: `./docker-compose.yml`
+- Compose path: `./deploy/compose.production.yml`
 - Public service: `frontend`
 - Container port: `8080`
-- Initial route: `/lms`
-- Required Dokploy variables: `DB_PASSWORD`, `ADMIN_PASSWORD`
-- Optional site override: `SITE_NAME` (defaults to `whitehouse-learning-demo`)
+- Application route: `/lms`
+- Required variables: `CLIENT_IMAGE`, `SITE_NAME`, `DB_PASSWORD`, `ADMIN_PASSWORD`
 
-The demo currently tracks the official `ghcr.io/frappe/lms:stable` image. Before a
-production launch, replace `stable` with an immutable image digest produced by the
-repository release workflow and configure off-server database and site backups.
+`CLIENT_IMAGE` must be an immutable `sha-<full git sha>` tag (or digest) emitted
+by the `Build client image` workflow. Do not use `latest`, `stable`, or the moving
+branch tag in production. See `docs/operations/DEPLOYMENT.md` for the promotion,
+backup, migration, smoke-test, and rollback sequence.

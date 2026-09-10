@@ -1,0 +1,25 @@
+/* Client-specific components opt into the .client-* namespace. Avoid broad
+   selectors here: upstream screens must remain stable during release merges. */
+.client-shell {
+	background: var(--client-surface-muted);
+	color: var(--client-text);
+}
+
+.client-card {
+	background: var(--client-surface);
+	border: 1px solid var(--client-border);
+	border-radius: var(--client-radius-md);
+	box-shadow: var(--client-shadow-sm);
+}
+
+.client-focus-ring:focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--client-brand-600) 38%, transparent);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.client-motion {
+		animation: none !important;
+		transition: none !important;
+	}
+}

@@ -1,0 +1,154 @@
+name: whitehouse-learning
+
+x-app-image: &app-image
+  image: ${CLIENT_IMAGE:?Set CLIENT_IMAGE to an immutable ghcr.io image tag or digest}
+  pull_policy: always
+  restart: unless-stopped
+  volumes:
+    - sites:/home/frappe/frappe-bench/sites
+    - logs:/home/frappe/frappe-bench/logs
+
+x-runtime-dependencies: &runtime-dependencies
+  configurator:
+    condition: service_completed_successfully
+  migrate:
+    condition: service_completed_successfully
+
+services:
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in Dokploy}
+      MARIADB_AUTO_UPGRADE: "1"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 15s
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - db-data:/var/lib/mysql
+
+  redis-cache:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+
+  redis-queue:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-queue-data:/data
+
+  configurator:
+    <<: *app-image
+    restart: "no"
+    entrypoint: ["bash", "-c"]
+    command:
+      - >
+        ls -1 apps > sites/apps.txt;
+        bench set-config -g db_host db;
+        bench set-config -gp db_port 3306;
+        bench set-config -g redis_cache redis://redis-cache:6379;
+        bench set-config -g redis_queue redis://redis-queue:6379;
+        bench set-config -g redis_socketio redis://redis-queue:6379;
+        bench set-config -gp socketio_port 9000;
+    depends_on:
+      db:
+        condition: service_healthy
+      redis-cache:
+        condition: service_started
+      redis-queue:
+        condition: service_started
+
+  create-site:
+    <<: *app-image
+    restart: "no"
+    entrypoint: ["bash", "-c"]
+    command:
+      - >
+        wait-for-it -t 120 db:3306;
+        wait-for-it -t 120 redis-cache:6379;
+        wait-for-it -t 120 redis-queue:6379;
+        if [ ! -f "sites/$${SITE_NAME}/site_config.json" ]; then
+          bench new-site "$${SITE_NAME}"
+          --mariadb-user-host-login-scope=%
+          --db-root-password "$${DB_PASSWORD}"
+          --admin-password "$${ADMIN_PASSWORD}"
+          --install-app payments
+          --install-app lms;
+        fi
+    environment:
+      SITE_NAME: ${SITE_NAME:?Set SITE_NAME in Dokploy}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in Dokploy}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in Dokploy}
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+
+  migrate:
+    <<: *app-image
+    restart: "no"
+    entrypoint: ["bash", "-c"]
+    command: ["bench --site '$${SITE_NAME}' migrate"]
+    environment:
+      SITE_NAME: ${SITE_NAME:?Set SITE_NAME in Dokploy}
+    depends_on:
+      create-site:
+        condition: service_completed_successfully
+
+  backend:
+    <<: *app-image
+    environment:
+      GUNICORN_THREADS: ${GUNICORN_THREADS:-4}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-2}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-120}
+    depends_on: *runtime-dependencies
+
+  frontend:
+    <<: *app-image
+    command: ["nginx-entrypoint.sh"]
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: ${SITE_NAME:?Set SITE_NAME in Dokploy}
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "on"
+      PROXY_READ_TIMEOUT: "120"
+      CLIENT_MAX_BODY_SIZE: 50m
+    depends_on:
+      backend:
+        condition: service_started
+      websocket:
+        condition: service_started
+
+  websocket:
+    <<: *app-image
+    command: ["node", "/home/frappe/frappe-bench/apps/frappe/socketio.js"]
+    depends_on: *runtime-dependencies
+
+  queue-short:
+    <<: *app-image
+    command: ["bench", "worker", "--queue", "short,default"]
+    depends_on: *runtime-dependencies
+
+  queue-long:
+    <<: *app-image
+    command: ["bench", "worker", "--queue", "long,default,short"]
+    depends_on: *runtime-dependencies
+
+  scheduler:
+    <<: *app-image
+    command: ["bench", "schedule"]
+    depends_on: *runtime-dependencies
+
+volumes:
+  db-data:
+  redis-queue-data:
+  sites:
+  logs:

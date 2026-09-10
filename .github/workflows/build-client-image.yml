@@ -1,0 +1,91 @@
+name: Build client image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - client-production
+      - staging
+
+concurrency:
+  group: client-image-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out application
+        uses: actions/checkout@v4
+
+      - name: Read pinned build revision
+        id: versions
+        shell: bash
+        run: |
+          echo "frappe_docker=$(tr -d '[:space:]' < .frappe-docker-version)" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Check out pinned Frappe Docker
+        uses: actions/checkout@v4
+        with:
+          repository: frappe/frappe_docker
+          ref: ${{ steps.versions.outputs.frappe_docker }}
+          path: frappe_docker
+
+      - name: Create layered-app manifest
+        shell: bash
+        env:
+          APP_REPOSITORY: ${{ github.server_url }}/${{ github.repository }}
+          APP_BRANCH: ${{ github.ref_name }}
+        run: |
+          jq -n \
+            --arg repository "$APP_REPOSITORY" \
+            --arg branch "$APP_BRANCH" \
+            '[
+              {"url":"https://github.com/frappe/payments","branch":"version-16"},
+              {"url":$repository,"branch":$branch}
+            ]' > frappe_docker/apps.json
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push immutable image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: frappe_docker
+          file: frappe_docker/images/layered/Containerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.versions.outputs.image }}:sha-${{ github.sha }}
+            ${{ steps.versions.outputs.image }}:${{ github.ref_name }}
+          build-args: |
+            FRAPPE_BRANCH=version-16
+            CACHE_BUST=${{ github.sha }}
+          secret-files: |
+            apps_json=frappe_docker/apps.json
+          cache-from: type=gha,scope=client-image
+          cache-to: type=gha,mode=max,scope=client-image
+
+      - name: Record deployable artifact
+        shell: bash
+        run: |
+          {
+            echo "### Client image"
+            echo
+            echo "- Image: \`${{ steps.versions.outputs.image }}:sha-${{ github.sha }}\`"
+            echo "- Digest: \`${{ steps.build.outputs.digest }}\`"
+            echo "- Source branch: \`${{ github.ref_name }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

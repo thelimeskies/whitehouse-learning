@@ -1,0 +1,32 @@
+:root {
+	/* Client-owned tokens. Keep these separate from upstream Frappe variables so
+	   upgrades can be merged without scattering brand values through the app. */
+	--client-brand-950: #0b1f3a;
+	--client-brand-900: #12345b;
+	--client-brand-700: #1f5f99;
+	--client-brand-600: #2879bd;
+	--client-brand-100: #dcecf8;
+	--client-brand-50: #f3f8fc;
+	--client-accent-500: #d99b2b;
+	--client-surface: #ffffff;
+	--client-surface-muted: #f6f8fb;
+	--client-border: #dce3ec;
+	--client-text: #172033;
+	--client-text-muted: #667085;
+	--client-success: #16845b;
+	--client-warning: #b36b00;
+	--client-danger: #c63c3c;
+	--client-radius-sm: 0.5rem;
+	--client-radius-md: 0.75rem;
+	--client-radius-lg: 1rem;
+	--client-shadow-sm: 0 1px 2px rgb(16 24 40 / 6%);
+	--client-shadow-md: 0 8px 24px rgb(16 24 40 / 10%);
+}
+
+[data-theme='dark'] {
+	--client-surface: #111827;
+	--client-surface-muted: #182235;
+	--client-border: #2b3a50;
+	--client-text: #f5f7fa;
+	--client-text-muted: #aeb9ca;
+}
