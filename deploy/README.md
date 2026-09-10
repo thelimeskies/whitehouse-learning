@@ -2,7 +2,7 @@
 
 This directory contains the demo deployment definition for Dokploy.
 
-- Compose path: `./deploy/dokploy-compose.yml`
+- Compose path: `./docker-compose.yml`
 - Public service: `frontend`
 - Container port: `8080`
 - Initial route: `/lms`
