@@ -71,8 +71,10 @@ jobs:
           tags: |
             ${{ steps.versions.outputs.image }}:sha-${{ github.sha }}
             ${{ steps.versions.outputs.image }}:${{ github.ref_name }}
+          # LMS v2.63 imports @framework/ui/ConditionBuilder, which is not on
+          # Frappe version-16. Keep this aligned with frontend-tests.yml.
           build-args: |
-            FRAPPE_BRANCH=version-16
+            FRAPPE_BRANCH=develop
             CACHE_BUST=${{ github.sha }}
           secret-files: |
             apps_json=frappe_docker/apps.json

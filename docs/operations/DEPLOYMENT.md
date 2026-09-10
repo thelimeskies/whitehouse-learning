@@ -69,3 +69,9 @@ migrations before merging.
 After staging validation, promote the tested commit and exact image digest to
 production manually. Update `.frappe-docker-version` separately when adopting a
 new reviewed build definition.
+
+The image currently builds against Frappe `develop`, matching the repository's
+frontend test workflow. LMS v2.63 uses `@framework/ui/ConditionBuilder`, which is
+not available on Frappe `version-16`; changing the framework branch therefore
+requires a full build and staging validation rather than an environment-only
+edit.
