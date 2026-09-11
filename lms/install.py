@@ -6,12 +6,28 @@ from lms.lms.enrollment_constraints import ensure_enrollment_unique_constraints
 
 
 def after_install():
+	configure_whitehouse_branding()
 	create_batch_source()
 	give_discussions_permission()
 	give_user_list_permission()
 	give_event_permission()
 	ensure_batch_enrollment_index()
 	ensure_enrollment_unique_constraints()
+
+
+def configure_whitehouse_branding():
+	"""Apply the client identity on a new site without requiring manual setup."""
+	website_settings = frappe.get_single("Website Settings")
+	website_settings.update(
+		{
+			"app_name": "Whitehouse Learning",
+			"app_logo": "/assets/lms/frontend/branding/whitehouse-learning-mark.png",
+			"banner_image": "/assets/lms/frontend/branding/whitehouse-learning-mark.png",
+			"footer_logo": "/assets/lms/frontend/branding/whitehouse-learning-mark.png",
+			"favicon": "/assets/lms/frontend/favicon.png",
+		}
+	)
+	website_settings.save(ignore_permissions=True)
 
 
 def ensure_batch_enrollment_index():

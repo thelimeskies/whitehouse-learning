@@ -31,8 +31,8 @@ class TestPWAManifest(BaseTestUtils):
 	def test_declares_colours_for_the_os_chrome(self):
 		manifest = _manifest()
 
-		self.assertEqual(manifest["theme_color"], "#FFFFFF")
-		self.assertEqual(manifest["background_color"], "#FFFFFF")
+		self.assertEqual(manifest["theme_color"], "#0B1F3A")
+		self.assertEqual(manifest["background_color"], "#F7F9FC")
 
 	def test_ships_both_icon_sizes(self):
 		sizes = {icon["sizes"] for icon in _manifest()["icons"]}

@@ -35,10 +35,12 @@ export const sessionStore = defineStore('lms-session', () => {
 		cache: 'brand',
 		auto: true,
 		onSuccess(data) {
-			brand.name = data.app_name
-			brand.logo = data.app_logo
+			brand.name = data.app_name || 'Whitehouse Learning'
+			brand.logo =
+				data.app_logo?.file_url ||
+				'/assets/lms/frontend/branding/whitehouse-learning-mark.png'
 			brand.favicon =
-				data.favicon?.file_url || '/assets/lms/frontend/learning.svg'
+				data.favicon?.file_url || '/assets/lms/frontend/favicon.png'
 		},
 	})
 

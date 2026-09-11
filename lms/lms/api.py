@@ -449,7 +449,9 @@ def get_file_info(file_url):
 	file_info = frappe.db.get_value(
 		"File", {"file_url": file_url}, ["file_name", "file_size", "file_url"], as_dict=1
 	)
-	return file_info
+	# Client-owned assets are shipped with the app rather than uploaded as File
+	# records. Keep those usable in the same response shape as uploaded branding.
+	return file_info or frappe._dict(file_url=file_url)
 
 
 @frappe.whitelist(allow_guest=True)
@@ -467,6 +469,13 @@ def get_branding():
 			settings.update({field: json.loads(json.dumps(file_info))})
 		else:
 			settings.update({field: value})
+
+	settings.app_name = settings.app_name or "Whitehouse Learning"
+	settings.app_logo = settings.app_logo or frappe._dict(
+		file_url="/assets/lms/frontend/branding/whitehouse-learning-mark.png"
+	)
+	settings.banner_image = settings.banner_image or settings.app_logo
+	settings.favicon = settings.favicon or frappe._dict(file_url="/assets/lms/frontend/favicon.png")
 
 	return settings
 
@@ -2336,7 +2345,7 @@ def get_progress_distribution(progressList: list):
 @frappe.whitelist(allow_guest=True)
 def get_pwa_manifest():
 	"""Web app manifest for installing the LMS as a PWA."""
-	title = frappe.db.get_single_value("Website Settings", "app_name") or "Frappe Learning"
+	title = frappe.db.get_single_value("Website Settings", "app_name") or "Whitehouse Learning"
 	route = get_lms_route()
 
 	# `display` was absent, so it defaulted to "browser" and the installed app
@@ -2346,20 +2355,19 @@ def get_pwa_manifest():
 	# start_url is not treated as a different app, and colours so the OS paints
 	# its own surfaces to match instead of flashing white.
 	#
-	# theme_color matches the light-mode `theme-color` meta in index.html. A
-	# manifest carries a single value, so the light one wins here and the meta
-	# tags keep handling the light/dark split.
+	# theme_color matches the branded browser chrome in index.html. A manifest
+	# carries one value, so both light and dark mode use the stable navy shell.
 	manifest = {
 		"id": route,
 		"name": title,
 		"short_name": title,
-		"description": "Easy to use, 100% open source Learning Management System",
+		"description": "Private professional learning, courses, and certificates from Whitehouse Learning",
 		"start_url": route,
 		"scope": route,
 		"display": "standalone",
 		"orientation": "portrait",
-		"theme_color": "#FFFFFF",
-		"background_color": "#FFFFFF",
+		"theme_color": "#0B1F3A",
+		"background_color": "#F7F9FC",
 		# Split by purpose rather than the previous combined "maskable any": a
 		# maskable icon is drawn with its edges cropped to the platform's shape,
 		# so reusing one image for both gives a clipped icon wherever the "any"
