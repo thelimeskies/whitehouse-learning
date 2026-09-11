@@ -357,7 +357,7 @@
 			"label": "General"
 		},
 		{
-			"default": "1",
+			"default": "0",
 			"fieldname": "allow_guest_access",
 			"fieldtype": "Check",
 			"label": "Allow Guest Access"
