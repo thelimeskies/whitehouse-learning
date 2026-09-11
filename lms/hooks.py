@@ -30,8 +30,8 @@ def get_lms_path():
 # app_include_js = "/assets/lms/js/lms.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/lms/css/lms.css"
-web_include_js = []
+web_include_css = ["/assets/lms/css/whitehouse_login.css"]
+web_include_js = ["/assets/lms/js/whitehouse_login.js"]
 
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "lms/public/scss/website"

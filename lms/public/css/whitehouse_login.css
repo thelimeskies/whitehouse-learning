@@ -1,0 +1,391 @@
+body.whitehouse-login-page {
+	--whitehouse-navy: #0b1f3a;
+	--whitehouse-blue: #1f5ca8;
+	--whitehouse-gold: #d6a954;
+	--whitehouse-ink: #152337;
+	--whitehouse-muted: #627084;
+	--whitehouse-line: #dce3ec;
+	--whitehouse-surface: #ffffff;
+	min-height: 100vh;
+	background:
+		radial-gradient(circle at 12% 12%, rgb(31 92 168 / 9%), transparent 30rem),
+		#f4f7fb;
+	color: var(--whitehouse-ink);
+}
+
+body.whitehouse-login-page .navbar,
+body.whitehouse-login-page .web-footer,
+body.whitehouse-login-page .page-header-wrapper,
+body.whitehouse-login-page .page-footer {
+	display: none !important;
+}
+
+body.whitehouse-login-page main.container {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	max-width: none;
+	min-height: 100vh;
+	padding: 30px;
+}
+
+body.whitehouse-login-page .page_content {
+	width: min(1180px, 100%);
+	margin: 0;
+}
+
+.whitehouse-login-page .whitehouse-auth-shell {
+	display: grid;
+	grid-template-columns: minmax(0, 1.08fr) minmax(390px, 0.92fr);
+	min-height: min(720px, calc(100vh - 60px));
+	overflow: hidden;
+	background: var(--whitehouse-surface);
+	border: 1px solid rgb(11 31 58 / 8%);
+	border-radius: 28px;
+	box-shadow: 0 30px 80px rgb(11 31 58 / 13%);
+}
+
+.whitehouse-login-page .whitehouse-auth-story {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	min-height: 100%;
+	padding: clamp(32px, 4.5vw, 64px);
+	overflow: hidden;
+	background-image:
+		linear-gradient(180deg, rgb(5 17 34 / 18%) 0%, rgb(5 17 34 / 56%) 48%, rgb(5 17 34 / 94%) 100%),
+		url("/assets/lms/images/whitehouse-login-hero.png");
+	background-position: center;
+	background-size: cover;
+	color: #fff;
+}
+
+.whitehouse-login-page .whitehouse-auth-story::after {
+	position: absolute;
+	right: -8rem;
+	bottom: -10rem;
+	width: 24rem;
+	height: 24rem;
+	border: 1px solid rgb(255 255 255 / 18%);
+	border-radius: 50%;
+	box-shadow: 0 0 0 4rem rgb(255 255 255 / 3%);
+	content: "";
+	pointer-events: none;
+}
+
+.whitehouse-login-page .whitehouse-auth-brand,
+.whitehouse-login-page .whitehouse-auth-mobile-brand {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 1rem;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+}
+
+.whitehouse-login-page .whitehouse-auth-brand {
+	position: relative;
+	z-index: 1;
+}
+
+.whitehouse-login-page .whitehouse-auth-brand img,
+.whitehouse-login-page .whitehouse-auth-mobile-brand img {
+	object-fit: contain;
+	border-radius: 10px;
+}
+
+.whitehouse-login-page .whitehouse-auth-story-content {
+	position: relative;
+	z-index: 1;
+	max-width: 540px;
+	padding-top: 80px;
+}
+
+.whitehouse-login-page .whitehouse-auth-eyebrow {
+	margin: 0 0 18px;
+	color: #f6dca8;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+}
+
+.whitehouse-login-page .whitehouse-auth-story h1 {
+	max-width: 520px;
+	margin: 0;
+	color: #fff;
+	font-size: clamp(2.5rem, 4.2vw, 4.65rem);
+	font-weight: 650;
+	line-height: 0.99;
+	letter-spacing: -0.055em;
+}
+
+.whitehouse-login-page .whitehouse-auth-description {
+	max-width: 520px;
+	margin: 24px 0 0;
+	color: rgb(255 255 255 / 78%);
+	font-size: clamp(1rem, 1.4vw, 1.15rem);
+	line-height: 1.65;
+}
+
+.whitehouse-login-page .whitehouse-auth-features {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px 18px;
+	margin: 26px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.whitehouse-login-page .whitehouse-auth-features li {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	color: rgb(255 255 255 / 88%);
+	font-size: 0.84rem;
+	font-weight: 600;
+}
+
+.whitehouse-login-page .whitehouse-auth-feature-marker {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--whitehouse-gold);
+	box-shadow: 0 0 0 4px rgb(214 169 84 / 17%);
+}
+
+.whitehouse-login-page .whitehouse-auth-access-note {
+	position: relative;
+	z-index: 1;
+	margin: 46px 0 0;
+	color: rgb(255 255 255 / 62%);
+	font-size: 0.76rem;
+	letter-spacing: 0.02em;
+}
+
+.whitehouse-login-page .whitehouse-auth-form-panel {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: clamp(36px, 5vw, 72px);
+	background: var(--whitehouse-surface);
+}
+
+.whitehouse-login-page .whitehouse-auth-mobile-brand {
+	display: none;
+}
+
+.whitehouse-login-page .whitehouse-auth-form-panel > section {
+	width: 100%;
+	max-width: 410px;
+}
+
+.whitehouse-login-page .login-content.page-card {
+	width: 100%;
+	max-width: none;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.whitehouse-login-page .page-card-head .app-logo {
+	display: none;
+}
+
+.whitehouse-login-page .page-card-head {
+	gap: 0 !important;
+	margin-bottom: 10px;
+}
+
+.whitehouse-login-page .page-card-head h4 {
+	color: var(--whitehouse-ink) !important;
+	font-size: clamp(2rem, 3vw, 2.65rem) !important;
+	font-weight: 650 !important;
+	line-height: 1.08;
+	letter-spacing: -0.045em;
+}
+
+.whitehouse-login-page .page-card-subtitle {
+	margin-top: 10px !important;
+	color: var(--whitehouse-muted) !important;
+	font-size: 0.98rem !important;
+	line-height: 1.55;
+}
+
+.whitehouse-login-page .form-signin {
+	gap: 28px !important;
+	margin-top: 22px;
+}
+
+.whitehouse-login-page .page-card-body {
+	gap: 18px !important;
+}
+
+.whitehouse-login-page .form-group label {
+	color: #405169 !important;
+	font-size: 0.82rem !important;
+	font-weight: 650;
+}
+
+.whitehouse-login-page .email-field,
+.whitehouse-login-page .password-field {
+	width: 100%;
+}
+
+.whitehouse-login-page .form-control {
+	width: 100%;
+	height: 52px;
+	padding: 0 15px;
+	color: var(--whitehouse-ink);
+	background: #fbfcfe;
+	border: 1px solid var(--whitehouse-line);
+	border-radius: 12px;
+	box-shadow: none;
+	font-size: 0.95rem;
+	transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.whitehouse-login-page .form-control:focus {
+	background: #fff;
+	border-color: var(--whitehouse-blue);
+	box-shadow: 0 0 0 4px rgb(31 92 168 / 11%);
+}
+
+.whitehouse-login-page .toggle-password {
+	top: 18px;
+	right: 16px;
+}
+
+.whitehouse-login-page a {
+	color: var(--whitehouse-blue) !important;
+	font-weight: 600;
+}
+
+.whitehouse-login-page .page-card-actions {
+	gap: 12px !important;
+}
+
+.whitehouse-login-page .page-card-actions .es-button {
+	min-height: 50px;
+	border-radius: 12px;
+	font-size: 0.94rem;
+	font-weight: 700;
+	transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.whitehouse-login-page .page-card-actions button.es-button[data-variant="solid"],
+.whitehouse-login-page .signup-disabled-message .es-button[data-variant="solid"] {
+	color: #fff !important;
+	background: var(--whitehouse-navy) !important;
+	border-color: var(--whitehouse-navy) !important;
+	box-shadow: 0 10px 24px rgb(11 31 58 / 18%);
+}
+
+.whitehouse-login-page .page-card-actions button.es-button[data-variant="solid"]:hover:not(:disabled),
+.whitehouse-login-page .signup-disabled-message .es-button[data-variant="solid"]:hover {
+	transform: translateY(-1px);
+	background: #102d52 !important;
+	box-shadow: 0 14px 28px rgb(11 31 58 / 22%);
+}
+
+.whitehouse-login-page .page-card-actions .btn-login-option {
+	color: var(--whitehouse-ink) !important;
+	background: #fff !important;
+	border: 1px solid var(--whitehouse-line) !important;
+}
+
+.whitehouse-login-page .login-error-banner,
+.whitehouse-login-page .login-success-banner {
+	border-radius: 12px;
+}
+
+.whitehouse-login-page .signup-disabled-message {
+	text-align: left;
+}
+
+@media (max-width: 900px) {
+	body.whitehouse-login-page main.container {
+		padding: 18px;
+	}
+
+	.whitehouse-login-page .whitehouse-auth-shell {
+		grid-template-columns: 1fr;
+		min-height: calc(100vh - 36px);
+	}
+
+	.whitehouse-login-page .whitehouse-auth-story {
+		min-height: 260px;
+		padding: 28px;
+		background-position: center 61%;
+	}
+
+	.whitehouse-login-page .whitehouse-auth-story-content {
+		padding-top: 38px;
+	}
+
+	.whitehouse-login-page .whitehouse-auth-story h1 {
+		max-width: 480px;
+		font-size: clamp(2.25rem, 8vw, 3.4rem);
+	}
+
+	.whitehouse-login-page .whitehouse-auth-description,
+	.whitehouse-login-page .whitehouse-auth-features,
+	.whitehouse-login-page .whitehouse-auth-access-note {
+		display: none;
+	}
+
+	.whitehouse-login-page .whitehouse-auth-form-panel {
+		padding: 44px clamp(24px, 8vw, 64px) 52px;
+	}
+}
+
+@media (max-width: 560px) {
+	body.whitehouse-login-page main.container {
+		align-items: flex-start;
+		padding: 0;
+	}
+
+	.whitehouse-login-page .whitehouse-auth-shell {
+		min-height: 100vh;
+		border: 0;
+		border-radius: 0;
+		box-shadow: none;
+	}
+
+	.whitehouse-login-page .whitehouse-auth-story {
+		display: none;
+	}
+
+	.whitehouse-login-page .whitehouse-auth-form-panel {
+		align-items: flex-start;
+		flex-direction: column;
+		justify-content: center;
+		min-height: 100vh;
+		padding: 34px 24px;
+	}
+
+	.whitehouse-login-page .whitehouse-auth-mobile-brand {
+		display: flex;
+		margin-bottom: 52px;
+		color: var(--whitehouse-navy);
+	}
+
+	.whitehouse-login-page .page-card-head h4 {
+		font-size: 2.2rem !important;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.whitehouse-login-page *,
+	.whitehouse-login-page *::before,
+	.whitehouse-login-page *::after {
+		scroll-behavior: auto !important;
+		transition-duration: 0.01ms !important;
+	}
+}
