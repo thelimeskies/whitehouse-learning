@@ -224,13 +224,15 @@ body.whitehouse-login-page .page_content {
 }
 
 .whitehouse-login-page .page-card-body {
-	gap: 18px !important;
+	gap: 22px !important;
 }
 
 .whitehouse-login-page .form-group label {
-	color: #405169 !important;
-	font-size: 0.82rem !important;
-	font-weight: 650;
+	margin-bottom: 8px !important;
+	color: #34465e !important;
+	font-size: 0.84rem !important;
+	font-weight: 700;
+	letter-spacing: 0.01em;
 }
 
 .whitehouse-login-page .email-field,
@@ -240,26 +242,47 @@ body.whitehouse-login-page .page_content {
 
 .whitehouse-login-page .form-control {
 	width: 100%;
-	height: 52px;
-	padding: 0 15px;
+	height: 56px;
+	padding: 0 17px;
 	color: var(--whitehouse-ink);
-	background: #fbfcfe;
-	border: 1px solid var(--whitehouse-line);
-	border-radius: 12px;
-	box-shadow: none;
-	font-size: 0.95rem;
+	background: #f4f7fb;
+	border: 1.5px solid #cbd6e4;
+	border-radius: 14px;
+	box-shadow: 0 1px 2px rgb(11 31 58 / 3%) inset;
+	font-size: 0.98rem;
+	font-weight: 500;
 	transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.whitehouse-login-page .form-control::placeholder {
+	color: #8b99aa;
+	opacity: 1;
+}
+
+.whitehouse-login-page .form-control:hover:not(:focus) {
+	background: #f8fafd;
+	border-color: #aebdd0;
 }
 
 .whitehouse-login-page .form-control:focus {
 	background: #fff;
-	border-color: var(--whitehouse-blue);
-	box-shadow: 0 0 0 4px rgb(31 92 168 / 11%);
+	border-color: #2c67b2;
+	box-shadow: 0 0 0 4px rgb(31 92 168 / 13%);
+	outline: none;
+}
+
+.whitehouse-login-page .password-field .form-control {
+	padding-right: 54px;
 }
 
 .whitehouse-login-page .toggle-password {
-	top: 18px;
-	right: 16px;
+	top: 20px;
+	right: 18px;
+	color: #64748b;
+}
+
+.whitehouse-login-page .form-group p.text-lg {
+	margin-top: 12px;
 }
 
 .whitehouse-login-page a {
