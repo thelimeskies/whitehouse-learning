@@ -24,30 +24,6 @@ export const PRIMARY_LABELS: readonly string[] = [
 // settings call resolved. Mirrors CRM's components/Mobile/MobileSidebar.vue.
 // `pickPrimaryTabs` still hides any the admin has switched off.
 export const GUEST_TABS: readonly NavLink[] = [
-	{
-		label: 'Courses',
-		icon: 'BookOpen',
-		to: 'Courses',
-		activeFor: ['Courses', 'CourseDetail', 'Lesson'],
-	},
-	{
-		label: 'Batches',
-		icon: 'Users',
-		to: 'Batches',
-		activeFor: ['Batches', 'BatchDetail'],
-	},
-	{
-		label: 'Jobs',
-		icon: 'Briefcase',
-		to: 'Jobs',
-		activeFor: ['Jobs', 'JobDetail'],
-	},
-	{
-		label: 'Statistics',
-		icon: 'TrendingUp',
-		to: 'Statistics',
-		activeFor: ['Statistics'],
-	},
 	// No route: it leaves the SPA, so MobileLayout sends this one to Frappe's
 	// server-rendered /login rather than through vue-router.
 	{ label: 'Log in', icon: 'LogIn' },

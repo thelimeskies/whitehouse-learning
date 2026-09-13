@@ -66,17 +66,10 @@
 							)
 						}}
 					</div>
-					<Button
-						v-if="user.data && !lesson.data.disable_self_learning"
-						@click="enrollStudent()"
-						variant="solid"
-					>
-						{{ __('Start Learning') }}
-					</Button>
 					<Badge
+						v-if="user.data"
 						theme="blue"
 						size="lg"
-						v-else-if="lesson.data.disable_self_learning"
 						class="mt-2"
 					>
 						{{ __('Contact the Administrator to enroll for this course.') }}
@@ -1150,34 +1143,6 @@ const canEditLesson = computed(() => {
 const allowInstructorContent = () => {
 	if (window.read_only_mode) return false
 	return isAdmin.value
-}
-
-const enrollment = createResource({
-	url: 'frappe.client.insert',
-	makeParams() {
-		return {
-			doc: {
-				doctype: 'LMS Enrollment',
-				course: props.courseName,
-				member: user.data?.name,
-			},
-		}
-	},
-})
-
-const enrollStudent = () => {
-	enrollment.submit(
-		{},
-		{
-			onSuccess() {
-				window.location.reload()
-			},
-			onError(err) {
-				toast.error(__(err.messages?.[0] || err))
-				console.error(err)
-			},
-		}
-	)
 }
 
 const toggleInlineMenu = async () => {

@@ -15,7 +15,6 @@ from lms.lms.utils import (
 	can_modify_batch,
 	can_modify_course,
 	get_membership,
-	guest_access_allowed,
 	has_moderator_role,
 )
 
@@ -27,8 +26,7 @@ def resolve_lesson_access(lesson: str, *, user: str | None = None) -> tuple[bool
 	"""Return ``(is_instructor, can_access)`` for a lesson, computed in a single pass.
 
 	- ``is_instructor``: can author the lesson's course → all media, incl. instructor files.
-	- ``can_access``: ``is_instructor`` OR enrolled member OR (published course AND
-	  include_in_preview AND guest access allowed).
+	- ``can_access``: ``is_instructor`` OR an assigned member.
 
 	Callers needing only one flag should use :func:`can_access_lesson`; this exists so a
 	caller needing both (e.g. get_lesson, which decides instructor-field visibility on top
@@ -50,16 +48,7 @@ def resolve_lesson_access(lesson: str, *, user: str | None = None) -> tuple[bool
 			return True, True
 		if get_membership(lesson_row.course, user):
 			return False, True
-		# Preview is for prospective students of a LIVE course. Require the course to be
-		# published so draft lessons don't leak via this gate (matches get_course_details,
-		# which already hides unpublished courses from non-authors). Instructors/members
-		# are handled above, so unpublishing never locks them out.
-		if (
-			lesson_row.include_in_preview
-			and frappe.db.get_value("LMS Course", lesson_row.course, "published")
-			and guest_access_allowed()
-		):
-			return False, True
+		# Whitehouse courses are assigned, so preview cannot bypass enrollment.
 		return False, False
 	finally:
 		frappe.session.user = original_user
@@ -70,8 +59,7 @@ def can_access_lesson(lesson: str, *, instructor_only: bool = False, user: str |
 
 	- instructors / moderators (can_modify_course) → all media (incl. instructor files)
 	- instructor_only=True → only the above; enrolled students denied
-	- else (student media): enrolled member OR (published course AND include_in_preview
-	  AND guest access allowed)
+	- else (student media): enrolled member only
 	"""
 	is_instructor, can_access = resolve_lesson_access(lesson, user=user)
 	return is_instructor if instructor_only else can_access

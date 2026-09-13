@@ -15,6 +15,7 @@ class LMSBatchEnrollment(Document):
 		self.add_member_to_live_class()
 
 	def validate(self):
+		self.validate_admin_assignment()
 		self.validate_owner()
 		self.validate_duplicate_members()
 		self.validate_payment()
@@ -22,13 +23,21 @@ class LMSBatchEnrollment(Document):
 		self.validate_seat_availability()
 		self.validate_course_enrollment()
 
+	def validate_admin_assignment(self):
+		if frappe.session.user == "Administrator" or {"Moderator", "System Manager"} & set(
+			frappe.get_roles()
+		):
+			return
+		frappe.throw(_("Only an administrator can assign a batch to a learner."), frappe.PermissionError)
+
 	def validate_owner(self):
 		if self.owner == self.member:
 			return
 
-		roles = frappe.get_roles()
-		if "Moderator" not in roles and "Batch Evaluator" not in roles:
-			frappe.throw(_("You must be a Moderator or Batch Evaluator to enroll users in a batch."))
+		if frappe.session.user != "Administrator" and not {"Moderator", "System Manager"} & set(
+			frappe.get_roles()
+		):
+			frappe.throw(_("Only an administrator can assign users to a batch."), frappe.PermissionError)
 
 	def validate_payment(self):
 		paid_batch = frappe.db.get_value("LMS Batch", self.batch, "paid_batch")
@@ -57,8 +66,9 @@ class LMSBatchEnrollment(Document):
 			frappe.throw(_("Enrollment in this batch is restricted. Please contact the Administrator."))
 
 	def is_admin(self):
-		roles = frappe.get_roles(frappe.session.user)
-		return "Course Creator" in roles or "Moderator" in roles or "Batch Evaluator" in roles
+		return frappe.session.user == "Administrator" or bool(
+			{"Moderator", "System Manager"} & set(frappe.get_roles())
+		)
 
 	def validate_duplicate_members(self):
 		# Lock the batch row for the rest of this transaction before reading. The

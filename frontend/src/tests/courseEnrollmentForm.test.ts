@@ -14,7 +14,7 @@ vi.stubGlobal('__', (text: string) => text)
 // frappe-ui's internal module resolution doesn't work under vitest (see
 // chapterForm.test.ts), so every export the form and FormShell pull in has to be
 // stubbed by hand.
-const { createResourceMock, getCachedListResourceMock, openSettingsMock } =
+const { createResourceMock, getCachedListResourceMock, openSettingsMock, callMock } =
 	vi.hoisted(() => {
 		window.matchMedia ??= (() => ({
 			matches: false,
@@ -25,6 +25,7 @@ const { createResourceMock, getCachedListResourceMock, openSettingsMock } =
 			createResourceMock: vi.fn(),
 			getCachedListResourceMock: vi.fn(),
 			openSettingsMock: vi.fn(),
+			callMock: vi.fn().mockResolvedValue([]),
 		}
 	})
 
@@ -41,6 +42,7 @@ vi.mock('@/components/HeaderButton.vue', () => ({
 
 vi.mock('frappe-ui', () => ({
 	createResource: createResourceMock,
+	call: callMock,
 	getCachedListResource: getCachedListResourceMock,
 	toast: { success: vi.fn(), error: vi.fn() },
 	Dialog: {
@@ -237,13 +239,13 @@ describe('CourseEnrollmentForm as a route', () => {
 
 	// The gate CourseDetail put on the Dashboard tab was moderator OR instructor,
 	// and instructor-ness is only knowable from the fetched course.
-	it('lets an instructor of the course through once the fetch lands', async () => {
+	it('does not let an instructor assign learners without Whitehouse admin rights', async () => {
 		courseResource.data = { name: 'COURSE-1', instructors: [instructor] }
 		const router = makeRouter()
 		await openForm(router)
 		const wrapper = await mountForm(router, instructor)
 
-		expect(fields(wrapper).exists()).toBe(true)
+		expect(fields(wrapper).exists()).toBe(false)
 	})
 
 	it('says so while the course it needs to judge that is still in flight', async () => {
@@ -289,6 +291,7 @@ describe('CourseEnrollmentForm as a route', () => {
 				doctype: 'LMS Enrollment',
 				course: 'COURSE-1',
 				member: 'student@example.com',
+				organization: null,
 				payment: null,
 				purchased_certificate: false,
 			},

@@ -80,7 +80,7 @@ describe('pickPrimaryTabs', () => {
 })
 
 describe('pickPrimaryTabs for a signed-out visitor', () => {
-	const guestLabels = ['Courses', 'Batches', 'Jobs', 'Statistics', 'Log in']
+	const guestLabels = ['Log in']
 
 	it('shows the whole bar before any sidebar link has loaded', () => {
 		// Regression: the guest bar used to be matched out of `sidebarLinks`,
@@ -100,11 +100,7 @@ describe('pickPrimaryTabs for a signed-out visitor', () => {
 		// Greptile P1 on #2630: the guest bar was hardcoded, so a visitor could
 		// see and open Batches or Jobs after LMS Settings had turned them off.
 		const visibility = { courses: 1, batches: 0, jobs: 0, statistics: 1 }
-		expect(pickPrimaryTabs([], false, visibility).map((t) => t.label)).toEqual([
-			'Courses',
-			'Statistics',
-			'Log in',
-		])
+		expect(pickPrimaryTabs([], false, visibility).map((t) => t.label)).toEqual(['Log in'])
 	})
 
 	it('keeps every tab while the settings are still unresolved', () => {
@@ -138,34 +134,21 @@ describe('pickPrimaryTabs for a signed-out visitor', () => {
 		])
 	})
 
-	it('does not confuse an empty object with an empty array', () => {
-		// The two shapes mean opposite things: `{}` is a settled answer that
-		// mentions nothing, `[]` is guest access withdrawn.
-		expect(pickPrimaryTabs([], false, {})).not.toEqual(
-			pickPrimaryTabs([], false, [])
-		)
+	it('shows only login regardless of legacy guest visibility settings', () => {
+		expect(pickPrimaryTabs([], false, {})).toEqual(pickPrimaryTabs([], false, []))
 	})
 
 	it('reads the flag however the endpoint spells it', () => {
 		// `lms_settings.get(item)` hands back an int, but the resource has been
 		// seen carrying strings; both mean the same thing.
-		expect(
-			pickPrimaryTabs([], false, { jobs: '0' }).map((t) => t.label)
-		).not.toContain('Jobs')
-		expect(
-			pickPrimaryTabs([], false, { jobs: '1' }).map((t) => t.label)
-		).toContain('Jobs')
+		expect(pickPrimaryTabs([], false, { jobs: '0' }).map((t) => t.label)).toEqual(['Log in'])
+		expect(pickPrimaryTabs([], false, { jobs: '1' }).map((t) => t.label)).toEqual(['Log in'])
 	})
 
 	it('gives every tab an icon, and a route unless it leaves the SPA', () => {
 		const tabs = pickPrimaryTabs([], false)
 		expect(tabs.every((t) => t.icon)).toBe(true)
-		expect(tabs.filter((t) => t.to).map((t) => t.to)).toEqual([
-			'Courses',
-			'Batches',
-			'Jobs',
-			'Statistics',
-		])
+		expect(tabs.filter((t) => t.to).map((t) => t.to)).toEqual([])
 	})
 })
 

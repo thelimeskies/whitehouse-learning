@@ -427,8 +427,11 @@ def get_job_opportunities_count(filters: dict = None, or_filters: dict = None):
 	return frappe.db.count("Job Opportunity", filters, or_filters)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_chart_details():
+	from lms.lms.admin_learning import require_learning_admin
+
+	require_learning_admin()
 	details = frappe._dict()
 	details.enrollments = frappe.db.count("LMS Enrollment")
 	details.courses = frappe.db.count(

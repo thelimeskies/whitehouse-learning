@@ -93,7 +93,7 @@
 				</router-link>
 			</template>
 			<Button
-				v-if="tab?.key === 'dashboard' && course.data && isMobile"
+				v-if="tab?.key === 'dashboard' && course.data && isMobile && (user.data?.is_moderator || user.data?.is_system_manager)"
 				variant="outline"
 				class="!size-9"
 				:tooltip="__('Enroll')"
@@ -104,7 +104,7 @@
 				</template>
 			</Button>
 			<Button
-				v-else-if="tab?.key === 'dashboard' && course.data"
+				v-else-if="tab?.key === 'dashboard' && course.data && (user.data?.is_moderator || user.data?.is_system_manager)"
 				variant="outline"
 				@click="openEnrollForm()"
 			>
@@ -112,6 +112,13 @@
 					<span class="lucide-plus size-4" />
 				</template>
 				{{ __('Enroll') }}
+			</Button>
+			<Button
+				v-if="tab?.key === 'dashboard' && course.data && (user.data?.is_moderator || user.data?.is_system_manager)"
+				variant="outline"
+				@click="openBulkForm()"
+			>
+				{{ __('Bulk assign') }}
 			</Button>
 			<Button
 				v-if="tab?.key === 'settings' && user.data?.is_moderator && !isMobile"
@@ -349,6 +356,15 @@ function togglePublishCourse() {
 function openEnrollForm() {
 	openFormRoute(router, {
 		name: 'NewCourseEnrollment',
+		params: { courseName: props.courseName },
+		hash: route.hash,
+		query: { ...route.query },
+	})
+}
+
+function openBulkForm() {
+	openFormRoute(router, {
+		name: 'BulkCourseEnrollment',
 		params: { courseName: props.courseName },
 		hash: route.hash,
 		query: { ...route.query },

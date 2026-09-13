@@ -11,12 +11,26 @@ from frappe.utils import ceil
 
 class LMSEnrollment(Document):
 	def before_insert(self):
+		self.validate_admin_assignment()
 		self.validate_duplicate_enrollment()
 		self.validate_course_enrollment_eligibility()
 		self.validate_owner()
 
+	def validate_admin_assignment(self):
+		"""Course access is assigned by Whitehouse administrators, never self-served."""
+		if frappe.session.user == "Administrator" or {"Moderator", "System Manager"} & set(
+			frappe.get_roles()
+		):
+			return
+		frappe.throw(_("Only an administrator can assign a course to a learner."), frappe.PermissionError)
+
 	def validate(self):
 		self.enforce_server_managed_fields()
+		if self.organization and not frappe.db.exists("LMS Organization", self.organization):
+			frappe.throw(_("Client organization does not exist."))
+		previous = None if self.is_new() else self.get_doc_before_save()
+		if previous and previous.organization != self.organization and not is_admin():
+			frappe.throw(_("Only an administrator can change the client organization."), frappe.PermissionError)
 
 	def enforce_server_managed_fields(self):
 		"""Revert progress / purchased_certificate to their server-set values for non-staff."""
@@ -101,12 +115,9 @@ class LMSEnrollment(Document):
 
 
 def is_admin():
-	roles = frappe.get_roles(frappe.session.user)
-	admin_roles = ["Moderator", "Course Creator", "Batch Evaluator"]
-	for role in admin_roles:
-		if role in roles:
-			return True
-	return False
+	return frappe.session.user == "Administrator" or bool(
+		{"Moderator", "System Manager"} & set(frappe.get_roles())
+	)
 
 
 def update_program_progress(member):

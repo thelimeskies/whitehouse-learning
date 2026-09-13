@@ -564,6 +564,7 @@ const getSidebarItems = (forMobile = false) => {
 					icon: 'TrendingUp',
 					to: 'Statistics',
 					activeFor: ['Statistics'],
+					condition: () => userResource?.data?.is_moderator || userResource?.data?.is_system_manager,
 				},
 				{
 					label: 'Contact Us',

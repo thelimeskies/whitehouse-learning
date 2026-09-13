@@ -13,6 +13,7 @@ DEMO_USERS = (
 	("demo.learner.one@whitehouse-learning.kylodo.com", "Demo", "Learner One"),
 	("demo.learner.two@whitehouse-learning.kylodo.com", "Demo", "Learner Two"),
 )
+DEMO_ORGANIZATION = "Demo Training Client"
 
 
 def create_demo_accounts():
@@ -21,6 +22,14 @@ def create_demo_accounts():
 		frappe.throw("Run demo provisioning as the site Administrator.", frappe.PermissionError)
 
 	results = []
+	if not frappe.db.exists("LMS Organization", DEMO_ORGANIZATION):
+		frappe.get_doc(
+			{
+				"doctype": "LMS Organization",
+				"organization_name": DEMO_ORGANIZATION,
+				"status": "Active",
+			}
+		).insert(ignore_permissions=True)
 	for email, first_name, last_name in DEMO_USERS:
 		if frappe.db.exists("User", email):
 			results.append({"email": email, "status": "already exists"})
@@ -47,10 +56,12 @@ def create_demo_accounts():
 	if course and frappe.db.exists("User", DEMO_USERS[0][0]):
 		member = DEMO_USERS[0][0]
 		if not frappe.db.exists("LMS Enrollment", {"course": course, "member": member}):
-			frappe.get_doc({"doctype": "LMS Enrollment", "course": course, "member": member}).insert(
+			frappe.get_doc({"doctype": "LMS Enrollment", "course": course, "member": member,
+				"organization": DEMO_ORGANIZATION}).insert(
 				ignore_permissions=True
 			)
 		results[0]["assigned_course"] = course
+		results[0]["organization"] = DEMO_ORGANIZATION
 
 	frappe.db.commit()
 	return results

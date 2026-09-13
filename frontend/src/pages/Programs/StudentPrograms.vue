@@ -4,7 +4,6 @@
 			<h1 class="text-lg-semibold text-ink-gray-9">
 				{{ __('All Programs') }}
 			</h1>
-			<TabButtons v-model="currentTab" :options="tabs" class="w-fit" />
 		</div>
 		<div v-for="(data, category) in programs.data" :key="category">
 			<div v-if="category == currentTab">
@@ -59,14 +58,13 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { createResource, TabButtons } from 'frappe-ui'
-import { computed, ref } from 'vue'
+import { createResource } from 'frappe-ui'
+import { ref } from 'vue'
 
 import { useRouter } from 'vue-router'
 import { convertToTitleCase } from '@/utils'
 import ProgressBar from '@/components/ProgressBar.vue'
 import EmptyStateLayout from '@/components/Layouts/EmptyStateLayout.vue'
-import { openFormRoute } from '@/composables/useFormRoute'
 
 const currentTab = ref('enrolled')
 const router = useRouter()
@@ -82,26 +80,6 @@ const openDetails = (programName: any, category: string) => {
 			name: 'ProgramDetail',
 			params: { programName: programName },
 		})
-	} else {
-		// openFormRoute, not a bare router.push: it stamps the history entry so
-		// cancelling pops back to this list rather than ejecting out of the app.
-		openFormRoute(router, {
-			name: 'ProgramEnrollment',
-			params: { programName: programName },
-		})
 	}
 }
-
-const tabs = computed(() => {
-	return [
-		{
-			label: __('Enrolled'),
-			value: 'enrolled',
-		},
-		{
-			label: __('Published'),
-			value: 'published',
-		},
-	]
-})
 </script>

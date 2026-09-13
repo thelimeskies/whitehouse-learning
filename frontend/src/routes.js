@@ -52,6 +52,12 @@ export const routes = [
 					import('@/pages/Forms/CourseEnrollmentForm.vue'),
 				props: true,
 			},
+			{
+				path: 'enrollment/bulk',
+				name: 'BulkCourseEnrollment',
+				component: () => import('@/pages/Forms/BulkCourseEnrollmentForm.vue'),
+				props: true,
+			},
 		],
 	},
 	{

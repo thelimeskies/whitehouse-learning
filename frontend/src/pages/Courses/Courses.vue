@@ -119,6 +119,7 @@ const router = useRouter()
 
 onMounted(() => {
 	setFiltersFromQuery()
+	if (user.data?.is_student) currentTab.value = 'enrolled'
 	updateCourses()
 })
 
@@ -320,6 +321,9 @@ watch(currentTab, () => {
 })
 
 const courseTabs = computed(() => {
+	if (user.data?.is_student) {
+		return [{ label: __('Assigned to me'), value: 'enrolled' }]
+	}
 	let tabs = [
 		{
 			label: __('Published'),

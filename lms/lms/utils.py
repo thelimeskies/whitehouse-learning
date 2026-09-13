@@ -602,7 +602,7 @@ def get_lesson_count(course: str) -> int:
 	return frappe.db.count("Lesson Reference", {"parent": ("in", chapter_references)})
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 @rate_limit(limit=500, seconds=60 * 60)
 def get_chart_data(
 	chart_name: str,
@@ -610,6 +610,9 @@ def get_chart_data(
 	from_date: str = None,
 	to_date: str = None,
 ):
+	from lms.lms.admin_learning import require_learning_admin
+
+	require_learning_admin()
 	from_date, to_date = get_chart_date_range(from_date, to_date)
 	chart = frappe.get_doc("Dashboard Chart", chart_name)
 	doctype = chart.document_type
@@ -682,9 +685,12 @@ def get_chart_details(
 		)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 @rate_limit(limit=500, seconds=60 * 60)
 def get_course_completion_data():
+	from lms.lms.admin_learning import require_learning_admin
+
+	require_learning_admin()
 	all_membership = frappe.db.count("LMS Enrollment")
 	completed = frappe.db.count("LMS Enrollment", {"progress": ["like", "%100%"]})
 
@@ -857,10 +863,8 @@ def get_current_exchange_rate(source: str, target: str = "USD") -> float:
 
 
 def guest_access_allowed():
-	allow_guest_access = frappe.get_cached_value("LMS Settings", None, "allow_guest_access")
-	if frappe.session.user == "Guest" and not allow_guest_access:
-		return False
-	return True
+	# Whitehouse Learning is a private, invitation-only LMS.
+	return frappe.session.user != "Guest"
 
 
 DEFAULT_PAGE_LENGTH = 24
@@ -884,7 +888,7 @@ def resolve_page_length(limit_page_length=None) -> int:
 def get_courses(filters: dict = None, start: int = 0, limit_page_length: int | str = None) -> list:
 	"""Returns the list of courses."""
 
-	if not guest_access_allowed():
+	if frappe.session.user == "Guest":
 		return []
 
 	if not filters:
@@ -936,7 +940,7 @@ def get_course_count(filters: dict = None) -> int:
 	title search is an or_filter. Both only exist once `update_course_filters`
 	has resolved them.
 	"""
-	if not guest_access_allowed():
+	if frappe.session.user == "Guest":
 		return 0
 
 	if not filters:
@@ -973,15 +977,21 @@ def as_filter_conditions(filters: dict) -> list:
 def get_course_categories() -> list:
 	"""Returns the full, unfiltered list of categories used by published courses."""
 
-	if not guest_access_allowed():
+	if frappe.session.user == "Guest":
 		return []
+	filters = {"published": 1, "category": ["is", "set"]}
+	if frappe.session.user != "Administrator" and not {"Moderator", "Course Creator"} & set(
+		frappe.get_roles()
+	):
+		assigned = frappe.get_all("LMS Enrollment", {"member": frappe.session.user}, pluck="course")
+		filters["name"] = ["in", assigned]
 
 	# Distinct category strings are inherently bounded (one per category, not per
 	# course), so the full set is intended; limit_page_length=0 makes the
 	# "no page cap" explicit rather than relying on get_all's default.
 	rows = frappe.get_all(
 		"LMS Course",
-		filters={"published": 1, "category": ["is", "set"]},
+		filters=filters,
 		pluck="category",
 		distinct=True,
 		order_by="category asc",
@@ -1018,6 +1028,14 @@ def get_course_or_filters(filters: dict) -> dict:
 def update_course_filters(filters: dict) -> tuple:
 	or_filters = {}
 	show_featured = False
+	# The client catalog is an assigned-learning catalog. Ignore any caller-supplied
+	# name/enrolled filter for learners and derive the allowed names from the
+	# authenticated user's enrollment instead.
+	if frappe.session.user != "Administrator" and not {"Moderator", "Course Creator"} & set(
+		frappe.get_roles()
+	):
+		assigned = frappe.get_all("LMS Enrollment", {"member": frappe.session.user}, pluck="course")
+		filters["name"] = ["in", assigned]
 
 	if filters.get("title"):
 		or_filters = get_course_or_filters(filters)
@@ -1126,11 +1144,13 @@ def get_course_fields():
 @frappe.whitelist(allow_guest=True)  # nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method
 @rate_limit(limit=500, seconds=60 * 60)
 def get_course_details(course: str):
-	if not guest_access_allowed():
+	if frappe.session.user == "Guest":
 		return {}
 
 	is_course_published = frappe.db.get_value("LMS Course", course, "published")
 	membership = get_membership(course)
+	if not membership and frappe.session.user != "Administrator" and not can_modify_course(course):
+		return {}
 	if not is_course_published and not can_modify_course(course) and not membership:
 		return {}
 
@@ -1211,7 +1231,11 @@ def get_categorized_courses(courses: list) -> dict:
 def get_course_outline(course: str, progress: bool = False) -> list:
 	"""Returns the course outline."""
 
-	if not guest_access_allowed():
+	if frappe.session.user == "Guest" or (
+		frappe.session.user != "Administrator"
+		and not can_modify_course(course)
+		and not get_membership(course)
+	):
 		return []
 
 	chapters = get_outline_chapter(course)
@@ -1632,10 +1656,9 @@ def get_batch_details(batch: str):
 
 	batch_students = frappe.get_all("LMS Batch Enrollment", {"batch": batch}, pluck="member")
 	is_batch_admin = can_modify_batch(batch)
-	is_batch_published = frappe.db.get_value("LMS Batch", batch, "published")
 	is_student_enrolled = frappe.session.user in batch_students
 
-	if not (is_batch_published or is_batch_admin or is_student_enrolled):
+	if not (is_batch_admin or is_student_enrolled):
 		return {}
 
 	batch_details = frappe.db.get_value(
@@ -2744,6 +2767,8 @@ def get_programs():
 		},
 		["name", "course_count", "member_count"],
 	)
+	if frappe.session.user != "Administrator" and not {"Moderator", "System Manager"} & set(frappe.get_roles()):
+		published_programs = []
 
 	programs_to_remove = []
 	for program in published_programs:
@@ -2766,6 +2791,8 @@ def get_program_details(program_name: str) -> dict:
 	is_member = frappe.db.exists(
 		"LMS Program Member", {"parent": program_name, "member": frappe.session.user}
 	)
+	if not is_member and frappe.session.user != "Administrator" and not {"Moderator", "System Manager"} & set(frappe.get_roles()):
+		frappe.throw(_("This program has not been assigned to you."), frappe.PermissionError)
 	if not is_published and not is_member:
 		frappe.throw(_("You are not authorized to view the details of this program."))
 
@@ -2810,6 +2837,10 @@ def get_program_details(program_name: str) -> dict:
 
 @frappe.whitelist()
 def enroll_in_program(program: str):
+	if frappe.session.user != "Administrator" and not {"Moderator", "System Manager"} & set(
+		frappe.get_roles()
+	):
+		frappe.throw(_("Only an administrator can assign a program to a learner."), frappe.PermissionError)
 	validate_program_enrollment(program)
 
 	if not frappe.db.exists("LMS Program Member", {"parent": program, "member": frappe.session.user}):
@@ -2879,6 +2910,9 @@ def get_batches(
 
 def update_batch_filters(filters: dict) -> None:
 	"""Turns the pseudo-filters the batch list offers into real ones, in place."""
+	if frappe.session.user != "Administrator" and not {"Moderator", "System Manager", "Batch Evaluator"} & set(frappe.get_roles()):
+		assigned = frappe.get_all("LMS Batch Enrollment", {"member": frappe.session.user}, pluck="batch")
+		filters["name"] = ["in", assigned]
 	if filters.get("enrolled"):
 		enrolled_batches = frappe.get_all(
 			"LMS Batch Enrollment", {"member": frappe.session.user}, pluck="batch"

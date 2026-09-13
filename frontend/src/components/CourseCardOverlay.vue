@@ -35,51 +35,14 @@
 					</router-link>
 					<CertificationLinks :courseName="course.data.name" class="w-full" />
 				</div>
-				<router-link
-					v-else-if="course.data?.paid_course && !isAdmin"
-					:to="{
-						name: 'Billing',
-						params: {
-							type: 'course',
-							name: course.data.name,
-						},
-					}"
-				>
-					<Button
-						variant="solid"
-						size="md"
-						class="w-full mb-8 text-p-base-medium"
-					>
-						<template #prefix>
-							<span class="lucide-credit-card size-4" />
-						</template>
-						<span>
-							{{ __('Buy this course') }}
-						</span>
-					</Button>
-				</router-link>
 				<Badge
-					v-else-if="course.data?.disable_self_learning && !isAdmin"
+					v-else-if="!isAdmin"
 					theme="blue"
 					size="lg"
 					class="mb-4"
 				>
-					{{ __('Contact the Administrator to enroll for this course') }}
+					{{ __('Your administrator assigns courses to learners') }}
 				</Badge>
-				<Button
-					v-else-if="!isAdmin"
-					@click="enrollStudent()"
-					variant="solid"
-					class="w-full mb-8"
-					size="md"
-				>
-					<template #prefix>
-						<span class="lucide-book-text size-4" />
-					</template>
-					<span>
-						{{ __('Enroll Now') }}
-					</span>
-				</Button>
 				<Button
 					v-if="canGetCertificate"
 					@click="fetchCertificate()"
@@ -148,11 +111,9 @@
 </template>
 <script setup lang="ts">
 import { computed, inject } from 'vue'
-import { Badge, Button, call, createResource, toast } from 'frappe-ui'
-import { useRouter } from 'vue-router'
+import { Badge, Button, createResource } from 'frappe-ui'
 import CertificationLinks from '@/components/CertificationLinks.vue'
 import VideoPreview from '@/components/VideoPreview.vue'
-import { useTelemetry } from 'frappe-ui/frappe'
 import { openExternal } from '@/utils/openExternal'
 import type {
 	CourseDetails,
@@ -161,11 +122,9 @@ import type {
 	SessionUser,
 } from '@/types'
 
-const router = useRouter()
 const user = inject<SessionUser>('$user')!
 const readOnlyMode = (window as Window & { read_only_mode?: boolean })
 	.read_only_mode
-const { capture } = useTelemetry()
 
 const props = withDefaults(
 	defineProps<{
@@ -173,44 +132,6 @@ const props = withDefaults(
 	}>(),
 	{}
 )
-
-function enrollStudent() {
-	if (!user.data) {
-		toast.warning(__('You need to login first to enroll for this course'))
-		setTimeout(() => {
-			window.location.href = `/login?redirect-to=${window.location.pathname}`
-		}, 500)
-		return
-	}
-	const courseName = props.course.data?.name
-	if (!courseName) return
-	call('frappe.client.insert', {
-		doc: {
-			doctype: 'LMS Enrollment',
-			course: courseName,
-			member: user.data.name,
-		},
-	})
-		.then(() => {
-			capture('enrolled_in_course', { course: courseName })
-			toast.success(__('You have been enrolled in this course'))
-			setTimeout(() => {
-				router.push({
-					name: 'Lesson',
-					params: {
-						courseName,
-						chapterNumber: 1,
-						lessonNumber: 1,
-					},
-				})
-			}, 1000)
-		})
-		.catch((err: { messages?: string[] } | string) => {
-			const msg = typeof err === 'string' ? err : err.messages?.[0] ?? 'Error'
-			toast.warning(__(msg))
-			console.error(err)
-		})
-}
 
 const is_instructor = (): boolean => {
 	let user_is_instructor = false

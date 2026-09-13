@@ -8,6 +8,13 @@
 				{{ refusal }}
 			</div>
 			<div v-else data-testid="course-enrollment-fields" class="space-y-4">
+				<div>
+					<label class="mb-1 block text-p-sm font-medium">{{ __('Client organization') }}</label>
+					<select v-model="organization" class="w-full rounded border border-outline-gray-2 bg-white p-3 text-p-sm">
+						<option value="">{{ __('Whitehouse direct training (no organization)') }}</option>
+						<option v-for="item in organizations" :key="item.name" :value="item.name" :disabled="item.status !== 'Active'">{{ item.organization_name }}</option>
+					</select>
+				</div>
 				<FormControl
 					type="checkbox"
 					:label="__('Purchased Certificate')"
@@ -50,11 +57,12 @@
 <script setup lang="ts">
 import {
 	createResource,
+	call,
 	FormControl,
 	getCachedListResource,
 	toast,
 } from 'frappe-ui'
-import { computed, inject, ref } from 'vue'
+import { computed, inject, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { openSettings } from '@/utils'
 import Link from '@/components/Controls/Link.vue'
@@ -63,7 +71,6 @@ import HeaderButton from '@/components/HeaderButton.vue'
 import { useFormRoute } from '@/composables/useFormRoute'
 import type {
 	CourseDetails,
-	CourseInstructorInfo,
 	Resource,
 	SessionUser,
 } from '@/types'
@@ -81,6 +88,12 @@ const readOnlyMode = (window as Window & { read_only_mode?: boolean })
 const student = ref<string | null>(null)
 const payment = ref<string | null>(null)
 const purchasedCertificate = ref<boolean>(false)
+const organization = ref('')
+const organizations = ref<{ name: string; organization_name: string; status: string }[]>([])
+
+onMounted(async () => {
+	if (!refusal.value) organizations.value = await call('lms.lms.admin_learning.get_organizations')
+})
 
 // The course page keeps its active tab in route.hash and CourseEditor keeps the
 // open lesson in route.query, so both have to travel back with us — closing to a
@@ -112,12 +125,6 @@ const course = createResource({
 
 const loadingCourse = computed(() => !course.data && course.loading)
 
-const isInstructor = computed(() =>
-	(course.data?.instructors ?? []).some(
-		(instructor: CourseInstructorInfo) => instructor.name === user.data?.name
-	)
-)
-
 // Copied from CourseDetail.vue's isAdmin(), which gated the Dashboard tab the
 // Enroll button lived on. A URL does not go through a button.
 //
@@ -126,7 +133,7 @@ const isInstructor = computed(() =>
 // anyone not entitled to set it.
 const refusal = computed(() => {
 	if (readOnlyMode) return __('This site is in read-only mode.')
-	if (!user.data?.is_moderator && !isInstructor.value)
+	if (!user.data?.is_moderator && !user.data?.is_system_manager)
 		return __('You do not have permission to enroll students in this course.')
 	return ''
 })
@@ -144,6 +151,7 @@ const enrollment = createResource({
 				doctype: 'LMS Enrollment',
 				course: props.courseName,
 				member: student.value,
+				organization: organization.value || null,
 				payment: purchasedCertificate.value ? payment.value : null,
 				purchased_certificate: purchasedCertificate.value,
 			},

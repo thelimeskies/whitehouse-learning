@@ -16,12 +16,9 @@
 					:description="__('Highlight on the homepage.')"
 					@update:modelValue="markDirty()"
 				/>
-				<BooleanSwitch
-					size="sm"
-					v-model="selfEnrollment"
-					:label="__('Self enrollment')"
-					:description="__('Let users enroll themselves.')"
-				/>
+				<p class="text-p-sm text-ink-gray-6">
+					{{ __('Courses are assigned by administrators; self enrollment is disabled.') }}
+				</p>
 				<BooleanSwitch
 					size="sm"
 					v-model="doc.enforce_lesson_completion"
@@ -228,15 +225,6 @@ const publishedOnLabel = computed<string>(() =>
 		? dayjs(doc.value.published_on).format('DD MMM YYYY')
 		: ''
 )
-
-const selfEnrollment = computed<boolean>({
-	get: () => !resource.doc?.disable_self_learning,
-	set: (val: boolean) => {
-		if (!resource.doc) return
-		resource.doc.disable_self_learning = val ? 0 : 1
-		markDirty()
-	},
-})
 
 function setPaidCourse(val: boolean) {
 	if (!resource.doc) return

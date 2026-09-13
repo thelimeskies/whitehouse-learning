@@ -1,0 +1,26 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "field:organization_name",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["organization_name", "status", "contact_email", "notes"],
+ "fields": [
+  {"fieldname": "organization_name", "fieldtype": "Data", "label": "Organization Name", "reqd": 1, "unique": 1, "in_list_view": 1},
+  {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nInactive", "default": "Active", "in_list_view": 1},
+  {"fieldname": "contact_email", "fieldtype": "Data", "label": "Contact Email", "options": "Email"},
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Internal Notes"}
+ ],
+ "module": "LMS",
+ "name": "LMS Organization",
+ "naming_rule": "By fieldname",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Moderator", "read": 1, "write": 1, "create": 1, "report": 1, "export": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "organization_name",
+ "track_changes": 1
+}
