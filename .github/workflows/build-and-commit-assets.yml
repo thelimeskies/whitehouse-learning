@@ -6,6 +6,7 @@ on:
       - develop
       - main
       - 'version-*'
+      - client-production
 
 concurrency:
   group: build-assets-${{ github.ref }}
@@ -63,7 +64,7 @@ jobs:
         run: |
           tar czf lms-assets.tar.gz \
             --exclude=node_modules --exclude=.gitkeep \
-            -C apps/lms/lms/public .
+            -C apps/lms/lms public/frontend www/_lms.html
 
       - name: Upload to rolling release
         env:
