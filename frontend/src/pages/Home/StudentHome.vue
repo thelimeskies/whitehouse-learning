@@ -73,23 +73,145 @@
 			</div>
 		</div>
 
-		<div v-if="myCourses.data?.length" class="mt-10">
-			<div class="flex items-center justify-between mb-3">
-				<h2 class="font-semibold text-md text-ink-gray-9">
-					{{
-						myCourses.data[0].membership
-							? __('My Courses')
-							: __('Our Popular Courses')
-					}}
-				</h2>
+		<div
+			v-if="!myCourses.data && !myCourses.error"
+			class="mt-10 rounded-2xl border border-outline-gray-2 bg-surface-elevation-1 p-8 text-sm text-ink-gray-6"
+		>
+			{{ __('Loading your training…') }}
+		</div>
+		<div
+			v-else-if="myCourses.error && !myCourses.data"
+			class="mt-10 rounded-2xl border border-outline-gray-2 bg-surface-elevation-1 p-8"
+		>
+			<h2 class="text-lg-semibold text-ink-gray-9">
+				{{ __('Your training could not be loaded') }}
+			</h2>
+			<p class="mt-2 text-sm text-ink-gray-6">
+				{{ __('Please try again in a moment.') }}
+			</p>
+			<button
+				type="button"
+				class="mt-5 rounded-lg bg-surface-blue-2 px-4 py-2 text-sm font-medium text-ink-blue-6"
+				@click="myCourses.reload()"
+			>
+				{{ __('Try again') }}
+			</button>
+		</div>
+		<section
+			v-else-if="!visibleCourses.length"
+			class="relative mt-10 overflow-hidden rounded-2xl border border-outline-gray-2 bg-surface-elevation-1 p-6 shadow-sm sm:p-10"
+		>
+			<div
+				class="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full bg-surface-blue-1 blur-3xl"
+				aria-hidden="true"
+			/>
+			<div
+				class="relative grid gap-9 lg:grid-cols-[minmax(0,1.3fr)_minmax(280px,0.7fr)] lg:items-center"
+			>
+				<div>
+					<div
+						class="mb-6 flex size-14 items-center justify-center rounded-2xl bg-surface-blue-2 text-ink-blue-6"
+					>
+						<span class="lucide-book-open-check size-7" aria-hidden="true" />
+					</div>
+					<p
+						class="text-xs font-semibold uppercase tracking-widest text-ink-blue-6"
+					>
+						{{ __('Your learning space') }}
+					</p>
+					<h2
+						class="mt-3 max-w-xl text-3xl font-semibold leading-tight text-ink-gray-9 sm:text-4xl"
+					>
+						{{ __('Your next course is on its way') }}
+					</h2>
+					<p class="mt-4 max-w-xl text-base leading-7 text-ink-gray-6">
+						{{
+							__(
+								'Whitehouse will add your training here when it is assigned. You do not need to enroll yourself.',
+							)
+						}}
+					</p>
+				</div>
+				<div
+					class="rounded-2xl border border-outline-gray-2 bg-surface-base p-6 shadow-sm"
+				>
+					<p
+						class="text-xs font-semibold uppercase tracking-widest text-ink-gray-5"
+					>
+						{{ __('What happens next') }}
+					</p>
+					<div class="mt-6 space-y-6">
+						<div class="flex gap-4">
+							<span
+								class="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-blue-2 text-sm font-semibold text-ink-blue-6"
+								>01</span
+							>
+							<div>
+								<p class="font-medium text-ink-gray-9">
+									{{ __('Training is assigned') }}
+								</p>
+								<p class="mt-1 text-sm leading-5 text-ink-gray-6">
+									{{ __('Your courses appear on this page.') }}
+								</p>
+							</div>
+						</div>
+						<div class="flex gap-4">
+							<span
+								class="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-blue-2 text-sm font-semibold text-ink-blue-6"
+								>02</span
+							>
+							<div>
+								<p class="font-medium text-ink-gray-9">
+									{{ __('Learn at your pace') }}
+								</p>
+								<p class="mt-1 text-sm leading-5 text-ink-gray-6">
+									{{ __('Open a course and pick up where you left off.') }}
+								</p>
+							</div>
+						</div>
+						<div class="flex gap-4">
+							<span
+								class="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-blue-2 text-sm font-semibold text-ink-blue-6"
+								>03</span
+							>
+							<div>
+								<p class="font-medium text-ink-gray-9">
+									{{ __('See your progress') }}
+								</p>
+								<p class="mt-1 text-sm leading-5 text-ink-gray-6">
+									{{ __('Your learning record updates as you go.') }}
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<div v-else class="mt-10">
+			<div class="mb-5 flex flex-wrap items-end justify-between gap-4">
+				<div>
+					<p
+						class="text-xs font-semibold uppercase tracking-widest text-ink-blue-6"
+					>
+						{{ __('Your learning') }}
+					</p>
+					<h2 class="mt-2 text-2xl font-semibold text-ink-gray-9">
+						{{ __('Assigned courses') }}
+					</h2>
+					<p class="mt-1 text-sm text-ink-gray-6">
+						{{ __('Continue your training and follow your progress.') }}
+					</p>
+				</div>
 				<router-link
 					:to="{
 						name: 'Courses',
 					}"
 				>
-					<span class="flex items-center gap-x-1 text-ink-gray-5 text-xs">
+					<span
+						class="flex items-center gap-x-1 text-ink-blue-6 text-sm font-medium"
+					>
 						<span>
-							{{ __('See all') }}
+							{{ __('View all courses') }}
 						</span>
 						<span class="lucide-move-right size-3 rtl:rotate-180" />
 					</span>
@@ -97,7 +219,7 @@
 			</div>
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 				<router-link
-					v-for="course in myCourses.data"
+					v-for="course in visibleCourses"
 					:key="course.name"
 					:to="{ name: 'CourseDetail', params: { courseName: course.name } }"
 				>
@@ -109,11 +231,7 @@
 		<div v-if="myBatches.data?.length" class="mt-10">
 			<div class="flex items-center justify-between mb-3">
 				<h2 class="font-semibold text-md text-ink-gray-9">
-					{{
-						myBatches.data?.[0].students?.includes(user.data?.name)
-							? __('My Batches')
-							: __('Our Upcoming Batches')
-					}}
+					{{ __('My Batches') }}
 				</h2>
 				<router-link
 					:to="{
@@ -141,7 +259,7 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { inject } from 'vue'
+import { computed, inject } from 'vue'
 import { createResource, Tooltip } from 'frappe-ui'
 import { formatTime } from '@/utils'
 import CourseCard from '@/components/CourseCard.vue'
@@ -160,6 +278,10 @@ const myCourses = createResource({
 	url: 'lms.lms.api.get_my_courses',
 	auto: true,
 })
+
+const visibleCourses = computed(() =>
+	(myCourses.data || []).filter((course: any) => course?.name && course?.title),
+)
 
 const myBatches = createResource({
 	url: 'lms.lms.api.get_my_batches',

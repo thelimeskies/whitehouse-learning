@@ -2686,16 +2686,13 @@ def get_admin_evals():
 @frappe.whitelist()
 def get_my_courses():
 	my_courses = []
-	courses = get_my_latest_courses()
-
-	if not len(courses):
-		courses = get_featured_home_courses()
-
-	if not len(courses):
-		courses = get_popular_courses()
-
-	for course in courses:
-		my_courses.append(get_course_details(course))
+	# Learners can only see courses assigned to them. Falling back to published
+	# courses produced empty detail objects after the access check and a blank
+	# "Popular Courses" section on the home page.
+	for course in get_my_latest_courses():
+		details = get_course_details(course)
+		if details.get("name"):
+			my_courses.append(details)
 
 	return my_courses
 
@@ -2712,37 +2709,10 @@ def get_my_latest_courses():
 	)
 
 
-def get_featured_home_courses():
-	return frappe.get_all(
-		"LMS Course",
-		{"published": 1, "featured": 1},
-		order_by="published_on desc",
-		limit=3,
-		pluck="name",
-	)
-
-
-def get_popular_courses():
-	return frappe.get_all(
-		"LMS Course",
-		{
-			"published": 1,
-		},
-		order_by="enrollments desc",
-		limit=3,
-		pluck="name",
-	)
-
-
 @frappe.whitelist()
 def get_my_batches():
 	my_batches = []
-	batches = get_my_latest_batches()
-
-	if not len(batches):
-		batches = get_upcoming_batches()
-
-	for batch in batches:
+	for batch in get_my_latest_batches():
 		batch_details = get_batch_details(batch)
 		if batch_details:
 			my_batches.append(batch_details)
@@ -2759,19 +2729,6 @@ def get_my_latest_batches():
 		order_by="creation desc",
 		limit=4,
 		pluck="batch",
-	)
-
-
-def get_upcoming_batches():
-	return frappe.get_all(
-		"LMS Batch",
-		{
-			"published": 1,
-			"start_date": [">=", getdate()],
-		},
-		order_by="start_date asc",
-		limit=4,
-		pluck="name",
 	)
 
 

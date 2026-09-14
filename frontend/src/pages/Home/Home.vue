@@ -1,5 +1,5 @@
 <template>
-	<div class="w-full p-5">
+	<div class="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8">
 		<div class="space-y-2">
 			<div class="flex items-center justify-between">
 				<h1 class="text-2xl-bold text-ink-gray-9">
@@ -12,7 +12,7 @@
 						@click="showStreakModal = true"
 						:aria-label="
 							__('View learning streak: {0} days').format(
-								streakInfo.data?.current_streak || 0
+								streakInfo.data?.current_streak || 0,
 							)
 						"
 						class="bg-surface-amber-2 px-2 py-1 rounded-md cursor-pointer"
@@ -133,17 +133,17 @@ const subtitle = computed(() => {
 				adminLiveClasses.data.length,
 				liveClassSuffix,
 				adminEvals.data.length,
-				evalSuffix
+				evalSuffix,
 			)
 		} else if (adminLiveClasses.data?.length > 0) {
 			return __('You have {0} upcoming {1}.').format(
 				adminLiveClasses.data.length,
-				liveClassSuffix
+				liveClassSuffix,
 			)
 		} else if (adminEvals.data?.length > 0) {
 			return __('You have {0} {1} scheduled.').format(
 				adminEvals.data.length,
-				evalSuffix
+				evalSuffix,
 			)
 		}
 		return __('Manage your courses and batches at a glance')
@@ -156,20 +156,20 @@ const subtitle = computed(() => {
 				myLiveClasses.data.length,
 				liveClassSuffix,
 				evalCount.value,
-				evalSuffix
+				evalSuffix,
 			)
 		} else if (myLiveClasses.data?.length > 0) {
 			return __('You have {0} upcoming {1}.').format(
 				myLiveClasses.data.length,
-				liveClassSuffix
+				liveClassSuffix,
 			)
 		} else if (evalCount.value > 0) {
 			return __('You have {0} {1} scheduled.').format(
 				evalCount.value,
-				evalSuffix
+				evalSuffix,
 			)
 		}
-		return __('Resume where you left off')
+		return __('Your assigned training and progress, all in one place')
 	}
 })
 
