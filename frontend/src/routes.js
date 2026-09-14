@@ -165,6 +165,12 @@ export const routes = [
 		component: () => import('@/pages/Clients.vue'),
 	},
 	{
+		path: '/clients/:organization',
+		name: 'ClientDetail',
+		component: () => import('@/pages/ClientDetail.vue'),
+		props: true,
+	},
+	{
 		path: '/user/:username',
 		name: 'Profile',
 		component: () => import('@/pages/Profile.vue'),

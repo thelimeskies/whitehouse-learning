@@ -24,26 +24,137 @@ def require_learning_admin():
 def get_organizations():
 	"""Whitehouse-managed client list; no client-side administrative roles."""
 	require_learning_admin()
-	return frappe.get_all(
+	organizations = frappe.get_all(
 		"LMS Organization",
-		fields=["name", "organization_name", "status"],
+		fields=["name", "organization_name", "status", "contact_email", "notes"],
 		order_by="organization_name asc",
 		limit_page_length=1000,
 	)
+	counts = frappe.db.sql(
+		"""SELECT organization, COUNT(*) AS assignments, COUNT(DISTINCT member) AS learners
+		FROM `tabLMS Enrollment` WHERE organization IS NOT NULL AND organization != ''
+		GROUP BY organization""",
+		as_dict=True,
+	)
+	by_organization = {row.organization: row for row in counts}
+	for organization in organizations:
+		count = by_organization.get(organization.name)
+		organization["assignments"] = count.assignments if count else 0
+		organization["learners"] = count.learners if count else 0
+	return organizations
 
 
 @frappe.whitelist()
-def create_organization(organization_name: str):
+def create_organization(organization_name: str, contact_email: str = "", notes: str = ""):
 	require_learning_admin()
 	organization_name = (organization_name or "").strip()
 	if not organization_name or len(organization_name) > 140:
 		frappe.throw(_("Enter an organization name of 1 to 140 characters."))
+	contact_email = (contact_email or "").strip().lower()
+	if contact_email:
+		validate_email_address(contact_email, True)
+	if len(notes or "") > 2000:
+		frappe.throw(_("Internal notes must be 2,000 characters or fewer."))
 	if frappe.db.exists("LMS Organization", organization_name):
 		return {"name": organization_name, "created": False}
 	doc = frappe.get_doc(
-		{"doctype": "LMS Organization", "organization_name": organization_name, "status": "Active"}
+		{"doctype": "LMS Organization", "organization_name": organization_name, "status": "Active",
+		 "contact_email": contact_email, "notes": (notes or "").strip()}
 	).insert(ignore_permissions=True)
 	return {"name": doc.name, "created": True}
+
+
+@frappe.whitelist()
+def get_organization_workspace(name: str):
+	"""One Whitehouse-owned view of a client and its assigned training."""
+	require_learning_admin()
+	organization = frappe.get_doc("LMS Organization", name)
+	courses = frappe.get_all(
+		"LMS Course", fields=["name", "title", "published"],
+		filters={"published": 1}, order_by="title asc", limit_page_length=1000,
+	)
+	assignments = frappe.db.sql(
+		"""SELECT e.name, e.member, u.full_name, e.course, c.title AS course_title,
+		e.progress, e.creation
+		FROM `tabLMS Enrollment` e
+		LEFT JOIN `tabUser` u ON u.name = e.member
+		LEFT JOIN `tabLMS Course` c ON c.name = e.course
+		WHERE e.organization = %(organization)s
+		ORDER BY e.creation DESC LIMIT 1000""",
+		{"organization": name}, as_dict=True,
+	)
+	counts = frappe.db.sql(
+		"""SELECT COUNT(*) AS assignments, COUNT(DISTINCT member) AS learners
+		FROM `tabLMS Enrollment` WHERE organization = %(organization)s""",
+		{"organization": name}, as_dict=True,
+	)[0]
+	return {
+		"organization": {"name": organization.name, "organization_name": organization.organization_name,
+			"status": organization.status, "contact_email": organization.contact_email or "",
+			"notes": organization.notes or ""},
+		"courses": courses,
+		"assignments": assignments,
+		"learner_count": counts.learners,
+		"assignment_count": counts.assignments,
+	}
+
+
+@frappe.whitelist()
+def update_organization(name: str, contact_email: str = "", notes: str = ""):
+	"""Update client intake information without changing access or assignments."""
+	require_learning_admin()
+	contact_email = (contact_email or "").strip().lower()
+	if contact_email:
+		validate_email_address(contact_email, True)
+	if len(notes or "") > 2000:
+		frappe.throw(_("Internal notes must be 2,000 characters or fewer."))
+	organization = frappe.get_doc("LMS Organization", name)
+	organization.contact_email = contact_email
+	organization.notes = (notes or "").strip()
+	organization.save(ignore_permissions=True)
+	return {"name": organization.name, "updated": True}
+
+
+@frappe.whitelist()
+def assign_client_learner(
+	organization: str, course: str, email: str, first_name: str = "", last_name: str = "",
+):
+	"""Assign one existing or newly invited learner to a client course."""
+	require_learning_admin()
+	if not frappe.db.exists("LMS Organization", {"name": organization, "status": "Active"}):
+		frappe.throw(_("Select an active client organization."))
+	if not frappe.db.exists("LMS Course", {"name": course, "published": 1}):
+		frappe.throw(_("Select a published course."))
+	email = (email or "").strip().lower()
+	validate_email_address(email, True)
+	existing = frappe.get_all(
+		"LMS Enrollment", filters={"course": course, "member": email},
+		fields=["name", "organization"], limit_page_length=1,
+	)
+	if existing:
+		if existing[0].organization != organization:
+			frappe.throw(_("This learner is already assigned to the course under another client."))
+		return {"email": email, "assigned": False, "created_user": False}
+	created_user = False
+	welcome_email_queued = False
+	if not frappe.db.exists("User", email):
+		first_name = (first_name or "").strip()
+		last_name = (last_name or "").strip()
+		if not first_name or len(first_name) > 140 or len(last_name) > 140:
+			frappe.throw(_("Enter a first name for the new learner (maximum 140 characters)."))
+		user = frappe.get_doc({
+			"doctype": "User", "email": email, "first_name": first_name,
+			"last_name": last_name, "enabled": 1, "user_type": "Website User",
+			"send_welcome_email": 1, "roles": [{"role": "LMS Student"}],
+		}).insert(ignore_permissions=True)
+		created_user = True
+		welcome_email_queued = bool(user.flags.email_sent)
+	frappe.get_doc({
+		"doctype": "LMS Enrollment", "course": course, "member": email,
+		"organization": organization,
+	}).insert(ignore_permissions=True)
+	return {"email": email, "assigned": True, "created_user": created_user,
+		"welcome_email_queued": welcome_email_queued}
 
 
 @frappe.whitelist()

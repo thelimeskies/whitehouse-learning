@@ -74,10 +74,10 @@
 
 			<div
 				v-if="currentTab === 'organizations'"
-				class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]"
+				class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)]"
 			>
 				<section
-					class="overflow-hidden rounded-2xl border border-outline-gray-2 bg-surface-elevation-1"
+					class="h-fit overflow-hidden rounded-2xl border border-outline-gray-2 bg-surface-elevation-1"
 				>
 					<div class="border-b border-outline-gray-2 p-6">
 						<h2 class="text-xl font-semibold text-ink-gray-9">
@@ -86,7 +86,7 @@
 						<p class="mt-1 text-sm text-ink-gray-6">
 							{{
 								__(
-									'Link course assignments to the client receiving the training.',
+									'Open a client to manage its contact, learners, course assignments, and outcomes.',
 								)
 							}}
 						</p>
@@ -135,17 +135,21 @@
 									<p class="truncate font-medium text-ink-gray-9">
 										{{ item.organization_name }}
 									</p>
-									<p class="text-xs text-ink-gray-5">{{ item.status }}</p>
+									<p class="text-xs text-ink-gray-5">
+										{{ item.status }} · {{ item.learners || 0 }}
+										{{ __('learners') }} · {{ item.assignments || 0 }}
+										{{ __('assignments') }}
+									</p>
 								</div>
 							</div>
 							<div class="flex items-center gap-4">
 								<router-link
 									:to="{
-										name: 'Statistics',
-										query: { organization: item.name },
+										name: 'ClientDetail',
+										params: { organization: item.name },
 									}"
 									class="text-sm font-medium text-ink-blue-6 hover:underline"
-									>{{ __('View outcomes') }}</router-link
+									>{{ __('Manage client') }}</router-link
 								>
 								<button
 									type="button"
@@ -168,12 +172,12 @@
 						<span class="lucide-plus size-5" aria-hidden="true" />
 					</div>
 					<h2 class="mt-5 text-lg font-semibold text-ink-gray-9">
-						{{ __('Add an organization') }}
+						{{ __('Onboard a client') }}
 					</h2>
 					<p class="mt-1 text-sm leading-6 text-ink-gray-6">
 						{{
 							__(
-								'Add a training client before assigning its people to a course.',
+								'Start with the organization and a contact. Next you can add learners and assign courses in its workspace.',
 							)
 						}}
 					</p>
@@ -192,6 +196,45 @@
 							:placeholder="__('e.g. Acme Group')"
 							class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2.5 text-sm text-ink-gray-9 focus:outline-none focus:ring-2 focus:ring-blue-500"
 						/>
+						<label
+							for="client-contact-email"
+							class="block text-sm font-medium text-ink-gray-8"
+							>{{ __('Primary contact email') }}
+							<span class="font-normal text-ink-gray-5">{{
+								__('optional')
+							}}</span></label
+						>
+						<input
+							id="client-contact-email"
+							v-model="contactEmail"
+							type="email"
+							autocomplete="email"
+							:placeholder="__('contact@client.com')"
+							class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2.5 text-sm text-ink-gray-9 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						/>
+						<p class="text-xs text-ink-gray-5">
+							{{
+								__(
+									'Stored for Whitehouse coordination; this does not send an invitation.',
+								)
+							}}
+						</p>
+						<label
+							for="client-notes"
+							class="block text-sm font-medium text-ink-gray-8"
+							>{{ __('Internal training brief') }}
+							<span class="font-normal text-ink-gray-5">{{
+								__('optional')
+							}}</span></label
+						>
+						<textarea
+							id="client-notes"
+							v-model="organizationNotes"
+							rows="3"
+							maxlength="2000"
+							:placeholder="__('Goals, audience, delivery notes…')"
+							class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2.5 text-sm text-ink-gray-9 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						/>
 						<p
 							v-if="organizationError"
 							role="alert"
@@ -205,7 +248,9 @@
 							class="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{{
-								creatingOrganization ? __('Adding…') : __('Add organization')
+								creatingOrganization
+									? __('Creating…')
+									: __('Create client & continue')
 							}}
 						</button>
 					</form>
@@ -351,6 +396,8 @@ const currentTab = ref(
 	route.query.tab === 'people' ? 'people' : 'organizations',
 )
 const newOrganization = ref('')
+const contactEmail = ref('')
+const organizationNotes = ref('')
 const organizationError = ref('')
 const creatingOrganization = ref(false)
 const updatingOrganization = ref('')
@@ -387,12 +434,22 @@ async function addOrganization() {
 	creatingOrganization.value = true
 	organizationError.value = ''
 	try {
-		await call('lms.lms.admin_learning.create_organization', {
+		const result = await call('lms.lms.admin_learning.create_organization', {
 			organization_name: newOrganization.value.trim(),
+			contact_email: contactEmail.value.trim(),
+			notes: organizationNotes.value.trim(),
 		})
-		newOrganization.value = ''
-		await organizations.reload()
-		toast.success(__('Organization added'))
+		if (!result.created) {
+			organizationError.value = __(
+				'This organization already exists. Open it from the list to continue onboarding.',
+			)
+			await organizations.reload()
+			return
+		}
+		await router.push({
+			name: 'ClientDetail',
+			params: { organization: result.name },
+		})
 	} catch {
 		organizationError.value = __(
 			'Unable to add this organization. Check the name and try again.',

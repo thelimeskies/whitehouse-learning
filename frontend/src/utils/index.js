@@ -563,7 +563,7 @@ const getSidebarItems = (forMobile = false) => {
 					label: 'Clients & people',
 					icon: 'Building2',
 					to: 'Clients',
-					activeFor: ['Clients', 'MemberForm'],
+					activeFor: ['Clients', 'ClientDetail', 'MemberForm'],
 					condition: () => userResource?.data?.is_moderator || userResource?.data?.is_system_manager,
 				},
 				{
