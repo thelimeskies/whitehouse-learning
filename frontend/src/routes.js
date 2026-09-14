@@ -160,6 +160,11 @@ export const routes = [
 		component: () => import('@/pages/Statistics.vue'),
 	},
 	{
+		path: '/clients',
+		name: 'Clients',
+		component: () => import('@/pages/Clients.vue'),
+	},
+	{
 		path: '/user/:username',
 		name: 'Profile',
 		component: () => import('@/pages/Profile.vue'),

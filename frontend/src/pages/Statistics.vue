@@ -135,26 +135,18 @@
 				</div>
 			</div>
 			<section class="mt-8 space-y-5">
-				<div class="rounded border p-4">
-					<h2 class="text-lg-semibold">{{ __('Client organizations') }}</h2>
-					<p class="mt-1 text-p-sm text-ink-gray-6">{{ __('Whitehouse manages training clients centrally. Learners do not sign up or enroll through an organization.') }}</p>
-					<div class="mt-3 flex flex-wrap gap-2">
-						<input v-model="newOrganization" type="text" maxlength="140" :placeholder="__('Organization name')" class="min-w-56 flex-1 rounded border border-outline-gray-2 p-2 text-p-sm" />
-						<button class="rounded bg-ink-gray-9 px-4 py-2 text-p-sm text-white" :disabled="!newOrganization.trim() || creatingOrganization" @click="addOrganization">{{ __('Add organization') }}</button>
-					</div>
-					<p v-if="organizationError" class="mt-2 text-p-sm text-red-700">{{ organizationError }}</p>
-				</div>
 				<div class="flex flex-wrap items-end justify-between gap-3">
 					<div>
 						<h2 class="text-2xl-semibold text-ink-gray-9">{{ __('Learning outcomes') }}</h2>
 						<p class="text-p-sm text-ink-gray-6">{{ __('Assignments, engagement, completion, and learners needing attention.') }}</p>
 					</div>
 					<div class="flex flex-wrap gap-2">
-					<select v-model="selectedOrganization" class="rounded border border-outline-gray-2 bg-white p-2 text-p-sm" @change="analytics.fetch()">
+					<router-link :to="{ name: 'Clients' }" class="inline-flex items-center rounded-lg border border-outline-gray-2 bg-surface-elevation-1 px-3 py-2 text-p-sm font-medium text-ink-blue-6 hover:bg-surface-gray-2">{{ __('Manage clients & people') }}</router-link>
+					<select v-model="selectedOrganization" class="rounded border border-outline-gray-2 bg-surface-base p-2 text-p-sm text-ink-gray-9" @change="analytics.fetch()">
 						<option value="">{{ __('All organizations and direct training') }}</option>
 						<option v-for="item in organizations" :key="item.name" :value="item.name">{{ item.organization_name }}</option>
 					</select>
-					<select v-model="selectedCourse" class="rounded border border-outline-gray-2 bg-white p-2 text-p-sm" @change="analytics.fetch()">
+					<select v-model="selectedCourse" class="rounded border border-outline-gray-2 bg-surface-base p-2 text-p-sm text-ink-gray-9" @change="analytics.fetch()">
 						<option value="">{{ __('All courses') }}</option>
 						<option v-for="course in courseOptions" :key="course.name" :value="course.name">{{ course.title }}</option>
 					</select>
@@ -222,40 +214,24 @@ import {
 	usePageMeta,
 } from 'frappe-ui'
 import { computed, inject, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
 import { sessionStore } from '../stores/session'
 
 const { brand } = sessionStore()
 const user = inject('$user')
+const route = useRoute()
 const isAdmin = computed(() => !!(user.data?.is_moderator || user.data?.is_system_manager))
 const selectedCourse = ref('')
-const selectedOrganization = ref('')
+const selectedOrganization = ref(typeof route.query.organization === 'string' ? route.query.organization : '')
 const courseOptions = ref([])
 const organizations = ref([])
-const newOrganization = ref('')
-const organizationError = ref('')
-const creatingOrganization = ref(false)
 const learnerSearch = ref('')
 const filteredPeople = computed(() => {
 	const query = learnerSearch.value.trim().toLowerCase()
 	const people = analytics.data?.people || []
 	return query ? people.filter((row) => `${row.full_name} ${row.member}`.toLowerCase().includes(query)) : people
 })
-
-async function addOrganization() {
-	if (!newOrganization.value.trim() || creatingOrganization.value) return
-	creatingOrganization.value = true
-	organizationError.value = ''
-	try {
-		await call('lms.lms.admin_learning.create_organization', { organization_name: newOrganization.value.trim() })
-		organizations.value = await call('lms.lms.admin_learning.get_organizations')
-		newOrganization.value = ''
-	} catch (error) {
-		organizationError.value = __('Unable to add organization. Check the name and try again.')
-	} finally {
-		creatingOrganization.value = false
-	}
-}
 
 const breadcrumbs = computed(() => {
 	return [

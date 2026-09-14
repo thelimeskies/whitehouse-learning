@@ -8,6 +8,7 @@
 		:has-next-page="hasNextPage"
 		v-model:search="search"
 		searchable
+		:new-label="__('Add user')"
 		:search-label="__('Search members')"
 		empty-name="Users"
 		empty-icon="lucide-user"

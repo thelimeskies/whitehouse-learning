@@ -337,7 +337,6 @@ describe('the member form route', () => {
 			await wrapper
 				.find('[data-testid="field-Email"] input')
 				.setValue('  jane@doe.com  ')
-			await wrapper.find('[data-testid="role-Student"]').trigger('click')
 			await save(wrapper).trigger('click')
 			await flushPromises()
 
@@ -347,6 +346,8 @@ describe('the member form route', () => {
 					email: MEMBER,
 					first_name: undefined,
 					last_name: undefined,
+					user_type: 'Website User',
+					send_welcome_email: 1,
 				},
 			})
 			expect(callMock).toHaveBeenCalledWith('lms.lms.api.save_role', {

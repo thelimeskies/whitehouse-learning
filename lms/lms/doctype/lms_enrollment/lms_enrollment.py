@@ -26,9 +26,13 @@ class LMSEnrollment(Document):
 
 	def validate(self):
 		self.enforce_server_managed_fields()
-		if self.organization and not frappe.db.exists("LMS Organization", self.organization):
-			frappe.throw(_("Client organization does not exist."))
 		previous = None if self.is_new() else self.get_doc_before_save()
+		if self.organization:
+			status = frappe.db.get_value("LMS Organization", self.organization, "status")
+			if not status:
+				frappe.throw(_("Client organization does not exist."))
+			if (self.is_new() or (previous and previous.organization != self.organization)) and status != "Active":
+				frappe.throw(_("Choose an active client organization for a new assignment."))
 		if previous and previous.organization != self.organization and not is_admin():
 			frappe.throw(_("Only an administrator can change the client organization."), frappe.PermissionError)
 

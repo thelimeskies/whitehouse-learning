@@ -47,6 +47,46 @@ def create_organization(organization_name: str):
 
 
 @frappe.whitelist()
+def invite_learner(email: str, first_name: str, last_name: str = ""):
+	"""Create an invited learner, leaving client grouping to course assignments."""
+	require_learning_admin()
+	email = (email or "").strip().lower()
+	first_name = (first_name or "").strip()
+	last_name = (last_name or "").strip()
+	validate_email_address(email, True)
+	if not first_name or len(first_name) > 140 or len(last_name) > 140:
+		frappe.throw(_("Enter a first name of 1 to 140 characters."))
+	if frappe.db.exists("User", email):
+		frappe.throw(_("This user already exists. Find them in Users and assign their training."))
+
+	user = frappe.get_doc(
+		{
+			"doctype": "User",
+			"email": email,
+			"first_name": first_name,
+			"last_name": last_name,
+			"enabled": 1,
+			"user_type": "Website User",
+			"send_welcome_email": 1,
+			"roles": [{"role": "LMS Student"}],
+		}
+	).insert(ignore_permissions=True)
+	return {"email": user.email, "created": True, "welcome_email_queued": bool(user.flags.email_sent)}
+
+
+@frappe.whitelist()
+def set_organization_status(name: str, status: str):
+	"""Pause or resume future assignments without removing existing records."""
+	require_learning_admin()
+	if status not in {"Active", "Inactive"}:
+		frappe.throw(_("Choose Active or Inactive status."))
+	organization = frappe.get_doc("LMS Organization", name)
+	organization.status = status
+	organization.save(ignore_permissions=True)
+	return {"name": organization.name, "status": organization.status}
+
+
+@frappe.whitelist()
 def bulk_assign_course(
 	course: str, csv_text: str, create_missing: int = 0, dry_run: int = 1,
 	organization: str | None = None,

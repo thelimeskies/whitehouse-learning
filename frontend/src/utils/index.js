@@ -560,6 +560,13 @@ const getSidebarItems = (forMobile = false) => {
 					activeFor: ['Jobs', 'JobDetail'],
 				},
 				{
+					label: 'Clients & people',
+					icon: 'Building2',
+					to: 'Clients',
+					activeFor: ['Clients', 'MemberForm'],
+					condition: () => userResource?.data?.is_moderator || userResource?.data?.is_system_manager,
+				},
+				{
 					label: 'Statistics',
 					icon: 'TrendingUp',
 					to: 'Statistics',

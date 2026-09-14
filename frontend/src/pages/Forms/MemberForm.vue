@@ -144,7 +144,7 @@ const roles = reactive({
 	moderator: false,
 	course_creator: false,
 	batch_evaluator: false,
-	lms_student: false,
+	lms_student: !isEdit.value,
 })
 
 const initialRoles = reactive({ ...roles })
@@ -179,6 +179,7 @@ const memberRow = computed<MemberRow | null>(() =>
 watch(
 	memberRow,
 	(found) => {
+		if (!isEdit.value) return
 		const current = found?.roles ?? []
 		for (const key of Object.keys(ROLE_MAP) as (keyof typeof roles)[]) {
 			roles[key] = current.includes(ROLE_MAP[key])
@@ -225,6 +226,8 @@ const addMember = async () => {
 				email: member.email.trim(),
 				first_name: member.first_name.trim() || undefined,
 				last_name: member.last_name.trim() || undefined,
+				user_type: 'Website User',
+				send_welcome_email: 1,
 			},
 		})
 
