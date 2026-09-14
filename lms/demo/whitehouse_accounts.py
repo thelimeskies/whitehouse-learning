@@ -14,6 +14,32 @@ DEMO_USERS = (
 	("demo.learner.two@whitehouse-learning.kylodo.com", "Demo", "Learner Two"),
 )
 DEMO_ORGANIZATION = "Demo Training Client"
+DEMO_ADMIN_EMAIL = "demo.admin@whitehouse-learning.kylodo.com"
+
+
+def create_demo_admin_account():
+	"""Create a Whitehouse LMS moderator for the demo, without system access."""
+	if frappe.session.user != "Administrator":
+		frappe.throw("Run demo provisioning as the site Administrator.", frappe.PermissionError)
+	if frappe.db.exists("User", DEMO_ADMIN_EMAIL):
+		return {"email": DEMO_ADMIN_EMAIL, "status": "already exists"}
+
+	password = secrets.token_urlsafe(18)
+	frappe.get_doc(
+		{
+			"doctype": "User",
+			"email": DEMO_ADMIN_EMAIL,
+			"first_name": "Demo",
+			"last_name": "Admin",
+			"enabled": 1,
+			"user_type": "Website User",
+			"send_welcome_email": 0,
+			"new_password": password,
+			"roles": [{"role": "Moderator"}],
+		}
+	).insert(ignore_permissions=True)
+	frappe.db.commit()
+	return {"email": DEMO_ADMIN_EMAIL, "password": password, "status": "created"}
 
 
 def create_demo_accounts():
